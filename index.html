@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekspedisi Nusantara: Misteri Teks Legenda 3D</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            background-color: #0b192c;
+        }
+        .font-hero {
+            font-family: 'Cinzel', serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+
+        /* 3D Flip Card CSS */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.90);
+            backdrop-filter: blur(14px);
+            border: 2px solid rgba(245, 158, 11, 0.45);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+        
+        .parchment-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #451a03;
+            border: 2px solid #b45309;
+            box-shadow: inset 0 0 15px rgba(180, 83, 9, 0.2);
+        }
+
+        /* Highlight classes for Module 5 */
+        .hl-orientasi, .hl-komplikasi, .hl-resolusi, .hl-koda,
+        .hl-action, .hl-time, .hl-conj, .hl-direct {
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            padding: 2px 4px;
+        }
+        
+        /* Active Highlight States */
+        .mode-struktur .hl-orientasi { background-color: rgba(59, 130, 246, 0.25); border-left: 4px solid #2563eb; display: block; padding: 10px; margin-bottom: 12px; }
+        .mode-struktur .hl-komplikasi { background-color: rgba(239, 68, 68, 0.25); border-left: 4px solid #dc2626; display: block; padding: 10px; margin-bottom: 12px; }
+        .mode-struktur .hl-resolusi { background-color: rgba(16, 185, 129, 0.25); border-left: 4px solid #059669; display: block; padding: 10px; margin-bottom: 12px; }
+        .mode-struktur .hl-koda { background-color: rgba(168, 85, 247, 0.25); border-left: 4px solid #9333ea; display: block; padding: 10px; margin-bottom: 12px; }
+
+        .mode-bahasa .hl-action { background-color: #fca5a5; color: #7f1d1d; font-weight: 700; border-bottom: 2px solid #dc2626; }
+        .mode-bahasa .hl-time { background-color: #93c5fd; color: #1e3a8a; font-weight: 700; border-bottom: 2px solid #2563eb; }
+        .mode-bahasa .hl-conj { background-color: #fde047; color: #713f12; font-weight: 700; border-bottom: 2px solid #ca8a04; }
+        .mode-bahasa .hl-direct { background-color: #d8b4fe; color: #581c87; font-weight: 700; border-bottom: 2px solid #9333ea; }
+    </style>
+</head>
+<body class="relative w-screen h-screen overflow-hidden select-none text-slate-100">
+
+    <!-- 3D WebGL Canvas Container for Main Adventure Map -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0 cursor-grab active:cursor-grabbing"></div>
+
+    <!-- 3D Floating Island Labels Container -->
+    <div id="labels-container" class="absolute inset-0 pointer-events-none z-10 overflow-hidden"></div>
+
+    <!-- Top Navigation / HUD -->
+    <header class="relative z-20 flex flex-wrap items-center justify-between px-4 py-3 md:px-8 md:py-4 bg-gradient-to-b from-slate-950/90 via-slate-900/60 to-transparent pointer-events-auto">
+        <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300">
+                <i class="fa-solid fa-compass text-2xl text-slate-950 animate-spin" style="animation-duration: 12s;"></i>
+            </div>
+            <div>
+                <h1 class="font-hero text-lg md:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 drop-shadow">
+                    EKSPEDISI NUSANTARA
+                </h1>
+                <p class="text-xs md:text-sm text-amber-200/80 font-medium">Petualangan 3D Materi Teks Legenda</p>
+            </div>
+        </div>
+
+        <!-- Score, Stars & Audio HUD -->
+        <div class="flex items-center space-x-2 md:space-x-4 mt-2 sm:mt-0">
+            <!-- Stars Progress -->
+            <div class="flex items-center bg-slate-900/90 border border-amber-500/40 rounded-full px-3.5 py-1.5 shadow-inner">
+                <i class="fa-solid fa-star text-yellow-400 text-base md:text-lg mr-2 animate-pulse"></i>
+                <span id="hud-stars" class="font-bold text-sm md:text-base text-yellow-300">0 / 15</span>
+            </div>
+
+            <!-- Score Counter -->
+            <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-full px-3.5 py-1.5 shadow-inner">
+                <i class="fa-solid fa-gem text-emerald-400 text-base md:text-lg mr-2"></i>
+                <span id="hud-score" class="font-bold text-sm md:text-base text-emerald-300">0 XP</span>
+            </div>
+
+            <!-- Sound Toggle Button -->
+            <button id="btn-sound" onclick="toggleSound()" class="w-10 h-10 rounded-full bg-slate-800/90 hover:bg-amber-600 border border-amber-400/40 flex items-center justify-center transition-all shadow-lg" title="Suara Efek">
+                <i id="icon-sound" class="fa-solid fa-volume-high text-amber-300"></i>
+            </button>
+
+            <!-- Reset Camera Button -->
+            <button onclick="resetCameraView()" class="hidden sm:flex items-center space-x-1.5 bg-slate-800/90 hover:bg-slate-700 border border-slate-600 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all shadow-lg" title="Reset Sudut Kamera 3D">
+                <i class="fa-solid fa-video"></i>
+                <span>Reset Kamera</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Bottom Quick Navigation Dock (Adventure Map Controls) -->
+    <div id="map-dock" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-4xl pointer-events-auto transition-all duration-500">
+        <div class="glass-panel rounded-2xl p-3 md:p-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-2 px-1">
+                <span class="text-xs font-semibold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-location-dot"></i> Peta Kepulauan 3D (Geser layar untuk memutar kamera, klik pulau untuk masuk)
+                </span>
+                <span id="completion-badge" class="hidden text-xs bg-emerald-600/30 border border-emerald-400 text-emerald-200 px-2.5 py-0.5 rounded-full font-bold">
+                    🎉 Semua Pulau Selesai!
+                </span>
+            </div>
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-3">
+                <!-- Level 1 Btn -->
+                <button onclick="selectIsland(1)" class="group relative flex flex-col items-center p-2 rounded-xl bg-slate-800/80 hover:bg-amber-600/30 border border-amber-500/30 hover:border-amber-400 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 font-bold text-sm mb-1 group-hover:scale-110 transition-transform">1</div>
+                    <span class="text-[10px] sm:text-xs font-bold text-center text-slate-200 line-clamp-1">Pengertian</span>
+                    <div id="dock-stars-1" class="flex space-x-0.5 text-[10px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </button>
+                <!-- Level 2 Btn -->
+                <button onclick="selectIsland(2)" class="group relative flex flex-col items-center p-2 rounded-xl bg-slate-800/80 hover:bg-amber-600/30 border border-amber-500/30 hover:border-amber-400 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400 flex items-center justify-center text-blue-300 font-bold text-sm mb-1 group-hover:scale-110 transition-transform">2</div>
+                    <span class="text-[10px] sm:text-xs font-bold text-center text-slate-200 line-clamp-1">Struktur</span>
+                    <div id="dock-stars-2" class="flex space-x-0.5 text-[10px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </button>
+                <!-- Level 3 Btn -->
+                <button onclick="selectIsland(3)" class="group relative flex flex-col items-center p-2 rounded-xl bg-slate-800/80 hover:bg-amber-600/30 border border-amber-500/30 hover:border-amber-400 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300 font-bold text-sm mb-1 group-hover:scale-110 transition-transform">3</div>
+                    <span class="text-[10px] sm:text-xs font-bold text-center text-slate-200 line-clamp-1">Unsur Intrinsik</span>
+                    <div id="dock-stars-3" class="flex space-x-0.5 text-[10px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </button>
+                <!-- Level 4 Btn -->
+                <button onclick="selectIsland(4)" class="group relative flex flex-col items-center p-2 rounded-xl bg-slate-800/80 hover:bg-amber-600/30 border border-amber-500/30 hover:border-amber-400 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400 flex items-center justify-center text-purple-300 font-bold text-sm mb-1 group-hover:scale-110 transition-transform">4</div>
+                    <span class="text-[10px] sm:text-xs font-bold text-center text-slate-200 line-clamp-1">Kebahasaan</span>
+                    <div id="dock-stars-4" class="flex space-x-0.5 text-[10px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </button>
+                <!-- Level 5 Btn -->
+                <button onclick="selectIsland(5)" class="group relative flex flex-col items-center p-2 rounded-xl bg-slate-800/80 hover:bg-amber-600/30 border border-amber-500/30 hover:border-amber-400 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400 flex items-center justify-center text-rose-300 font-bold text-sm mb-1 group-hover:scale-110 transition-transform">5</div>
+                    <span class="text-[10px] sm:text-xs font-bold text-center text-slate-200 line-clamp-1">Analisis Teks</span>
+                    <div id="dock-stars-5" class="flex space-x-0.5 text-[10px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         MODAL CONTAINER FOR THE 5 MODULES (WITH 3D THEME BACKGROUNDS)
+         ===================================================== -->
+    <div id="module-overlay" class="fixed inset-0 z-30 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md">
+        
+        <!-- 3D Theme Background Canvas for Active Module -->
+        <div id="module-canvas-container" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-45"></div>
+
+        <div class="glass-panel relative z-10 w-full max-w-5xl max-h-[90vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl border-2 border-amber-500/50 animate-fadeIn">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30">
+                <div class="flex items-center space-x-3">
+                    <span id="modal-badge" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider">
+                        Pulau 1
+                    </span>
+                    <h2 id="modal-title" class="font-hero text-lg sm:text-2xl font-bold text-amber-300">
+                        Pengertian Teks Legenda
+                    </h2>
+                </div>
+                <button onclick="closeModule()" class="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-500/40 transition-all text-xs sm:text-sm font-bold shadow">
+                    <i class="fa-solid fa-map"></i>
+                    <span>Kembali ke Peta Utama</span>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6">
+
+                <!-- ==========================================
+                     MODUL 1: PENGERTIAN TEKS LEGENDA
+                     ========================================== -->
+                <div id="content-mod-1" class="module-section hidden space-y-6">
+                    <!-- Materi Banner -->
+                    <div class="grid md:grid-cols-3 gap-6 items-center">
+                        <div class="md:col-span-2 space-y-4">
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">
+                                <i class="fa-solid fa-book-open"></i>
+                                <span>Materi Dasar</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white">Apa itu Teks Legenda?</h3>
+                            <p class="text-slate-200 leading-relaxed">
+                                <strong class="text-amber-400">Teks Legenda</strong> adalah cerita prosa rakyat yang dianggap oleh sebagian masyarakat sebagai sesuatu yang <strong>benar-benar pernah terjadi</strong> di masa lampau. Berbeda dengan mite (mitos), legenda bersifat sekuler (keduniawian), terjadi pada masa yang belum terlalu lampau, dan <strong class="text-emerald-300">terikat erat dengan asal-usul suatu tempat, gunung, danau, atau kejadian alam</strong>.
+                            </p>
+                            <div class="grid sm:grid-cols-3 gap-3 pt-2">
+                                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700">
+                                    <i class="fa-solid fa-mountain-sun text-amber-400 text-xl mb-1.5"></i>
+                                    <h4 class="font-bold text-sm text-amber-200">Asal-Usul Tempat</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Selalu dikaitkan dengan bukti fisik alam seperti Danau Toba, Gunung Tangkuban Perahu, atau Candi Prambanan.</p>
+                                </div>
+                                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700">
+                                    <i class="fa-solid fa-users-rays text-emerald-400 text-xl mb-1.5"></i>
+                                    <h4 class="font-bold text-sm text-emerald-200">Tokoh Manusia Luar Biasa</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Tokoh utamanya adalah manusia yang terkadang memiliki kesaktian atau mengalami keajaiban.</p>
+                                </div>
+                                <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700">
+                                    <i class="fa-solid fa-scale-balanced text-blue-400 text-xl mb-1.5"></i>
+                                    <h4 class="font-bold text-sm text-blue-200">Pesan Moral Luhur</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Diturunkan secara lisan dari generasi ke generasi untuk mengajarkan nilai kebaikan dan budi pekerti.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decorative Hero Illustration Box -->
+                        <div class="parchment-box rounded-2xl p-5 flex flex-col items-center text-center shadow-xl">
+                            <div class="w-16 h-16 rounded-full bg-amber-800 text-amber-100 flex items-center justify-center text-3xl mb-3 shadow-md">
+                                <i class="fa-solid fa-scroll"></i>
+                            </div>
+                            <h4 class="font-hero font-bold text-lg text-amber-950">Catatan Sang Penjelajah</h4>
+                            <p class="text-xs sm:text-sm text-amber-900 mt-2 italic">
+                                "Setiap gunung yang menjulang dan danau yang membentang di Nusantara menyimpan kisah legenda yang diwariskan leluhur kita!"
+                            </p>
+                            <div class="mt-4 w-full pt-3 border-t border-amber-700/30 text-xs font-bold text-amber-950">
+                                Contoh Populer:<br>
+                                • Legenda Danau Toba (Sumut)<br>
+                                • Tangkuban Perahu (Jabar)<br>
+                                • Roro Jonggrang (DIY/Jateng)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini-Game Kuis Modul 1 -->
+                    <div class="mt-8 pt-6 border-t border-slate-700/80">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-gamepad"></i> Tantangan Kuis Pemahaman (2 Soal)
+                                </h3>
+                                <p class="text-xs text-slate-300">Jawab kedua pertanyaan di bawah ini dengan tepat untuk meraih 3 Bintang!</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5">
+                            <!-- Question 1 -->
+                            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 space-y-3">
+                                <p class="font-semibold text-sm sm:text-base text-white">
+                                    1. Manakah pernyataan di bawah ini yang merupakan ciri khas utama dari sebuah <span class="text-amber-400">Teks Legenda</span>?
+                                </p>
+                                <div class="grid sm:grid-cols-2 gap-2.5" id="q1-options">
+                                    <button onclick="selectQuizOption(1, 0)" class="q1-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        A. Menceritakan kehidupan binatang yang dapat berbicara seperti manusia (Fabel).
+                                    </button>
+                                    <button onclick="selectQuizOption(1, 1)" class="q1-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        B. Cerita rakyat yang dianggap pernah terjadi dan terikat dengan asal-usul suatu tempat atau fenomena alam.
+                                    </button>
+                                    <button onclick="selectQuizOption(1, 2)" class="q1-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        C. Laporan ilmiah hasil penelitian geologi tentang proses meletusnya gunung berapi.
+                                    </button>
+                                    <button onclick="selectQuizOption(1, 3)" class="q1-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        D. Kisah nyata perjalanan hidup seorang tokoh pahlawan kemerdekaan yang ditulis sendiri (Autobiografi).
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Question 2 -->
+                            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 space-y-3">
+                                <p class="font-semibold text-sm sm:text-base text-white">
+                                    2. Seorang siswa membaca cerita tentang Sangkuriang yang menendang perahu hingga terbalik dan berubah menjadi gunung. Cerita tersebut digolongkan sebagai legenda karena...
+                                </p>
+                                <div class="grid sm:grid-cols-2 gap-2.5" id="q2-options">
+                                    <button onclick="selectQuizOption(2, 0)" class="q2-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        A. Ditulis menggunakan bahasa asing dan berlatar di masa depan.
+                                    </button>
+                                    <button onclick="selectQuizOption(2, 1)" class="q2-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        B. Tidak memiliki pesan moral sama sekali untuk pembaca.
+                                    </button>
+                                    <button onclick="selectQuizOption(2, 2)" class="q2-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        C. Menjelaskan asal-usul terbentuknya Gunung Tangkuban Perahu di Jawa Barat.
+                                    </button>
+                                    <button onclick="selectQuizOption(2, 3)" class="q2-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm transition-all">
+                                        D. Seluruh tokohnya adalah hewan hutan yang saling bekerja sama.
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <div id="mod1-feedback" class="text-sm font-bold"></div>
+                            <button onclick="checkMod1Quiz()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition-all">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> Periksa Jawaban
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     MODUL 2: STRUKTUR TEKS LEGENDA
+                     ========================================== -->
+                <div id="content-mod-2" class="module-section hidden space-y-6">
+                    <div class="space-y-3">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-bold">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>4 Pilar Struktur</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">Struktur Pembangun Teks Legenda</h3>
+                        <p class="text-slate-300 text-sm">
+                            Sebuah teks legenda tersusun secara sistematis melalui <strong>4 tahap struktur utama</strong> agar alur ceritanya runtut dan menarik:
+                        </p>
+
+                        <!-- 4 Structure Cards -->
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                            <div class="p-4 rounded-2xl bg-blue-950/80 border border-blue-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-xs font-black px-2 py-0.5 rounded bg-blue-500 text-slate-950">1. ORIENTASI</span>
+                                    <p class="text-xs text-slate-200 mt-2 leading-relaxed">
+                                        Bagian awal cerita yang memperkenalkan <strong>tokoh, latar tempat, dan latar waktu</strong> sebelum konflik muncul.
+                                    </p>
+                                </div>
+                                <button onclick="showStructureExample('orientasi')" class="mt-3 w-full py-2 px-3 rounded-xl bg-blue-500/20 hover:bg-blue-500 hover:text-slate-950 text-blue-300 border border-blue-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                                    <i class="fa-solid fa-book-open-reader"></i> Lihat Contoh Paragraf
+                                </button>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-xs font-black px-2 py-0.5 rounded bg-rose-500 text-white">2. KOMPLIKASI</span>
+                                    <p class="text-xs text-slate-200 mt-2 leading-relaxed">
+                                        Bagian munculnya <strong>masalah atau konflik</strong> yang dialami tokoh utama hingga mencapai puncak ketegangan (klimaks).
+                                    </p>
+                                </div>
+                                <button onclick="showStructureExample('komplikasi')" class="mt-3 w-full py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white text-rose-300 border border-rose-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                                    <i class="fa-solid fa-book-open-reader"></i> Lihat Contoh Paragraf
+                                </button>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-xs font-black px-2 py-0.5 rounded bg-emerald-500 text-slate-950">3. RESOLUSI</span>
+                                    <p class="text-xs text-slate-200 mt-2 leading-relaxed">
+                                        Bagian <strong>penyelesaian masalah</strong> atau meredanya konflik, baik berakhir bahagia maupun berakhir tragis/keajaiban alam.
+                                    </p>
+                                </div>
+                                <button onclick="showStructureExample('resolusi')" class="mt-3 w-full py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 border border-emerald-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                                    <i class="fa-solid fa-book-open-reader"></i> Lihat Contoh Paragraf
+                                </button>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-purple-950/80 border border-purple-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-xs font-black px-2 py-0.5 rounded bg-purple-500 text-white">4. KODA / REORIENTASI</span>
+                                    <p class="text-xs text-slate-200 mt-2 leading-relaxed">
+                                        Bagian penutup yang memuat <strong>pesan moral (amanat)</strong> atau penjelasan terbentuknya suatu tempat di masa kini.
+                                    </p>
+                                </div>
+                                <button onclick="showStructureExample('koda')" class="mt-3 w-full py-2 px-3 rounded-xl bg-purple-500/20 hover:bg-purple-500 hover:text-white text-purple-300 border border-purple-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                                    <i class="fa-solid fa-book-open-reader"></i> Lihat Contoh Paragraf
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Structure Paragraph Example Display Box -->
+                        <div id="structure-example-box" class="hidden mt-3 p-4 sm:p-5 rounded-2xl bg-slate-900/95 border-2 border-amber-400/70 shadow-xl transition-all">
+                            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5 mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <span id="struct-ex-badge" class="px-2.5 py-1 rounded-md text-xs font-black uppercase bg-amber-500 text-slate-950">CONTOH</span>
+                                    <h4 id="struct-ex-title" class="font-bold text-sm sm:text-base text-amber-300">Contoh Paragraf Struktur</h4>
+                                </div>
+                                <button onclick="closeStructureExample()" class="text-slate-400 hover:text-rose-400 text-xs font-bold flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
+                                    <i class="fa-solid fa-xmark"></i> Tutup
+                                </button>
+                            </div>
+                            <blockquote id="struct-ex-paragraph" class="p-3.5 rounded-xl bg-slate-800/90 border-l-4 border-amber-400 text-xs sm:text-sm text-slate-100 italic leading-relaxed">
+                            </blockquote>
+                            <div id="struct-ex-note" class="mt-2.5 text-xs text-emerald-300 font-medium flex items-start gap-2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini-Game Modul 2: Click-to-Match / Drag-and-Drop -->
+                    <div class="pt-5 border-t border-slate-700/80 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-puzzle-piece"></i> Mini-Game: Pasangkan Struktur & Definisi!
+                                </h3>
+                                <p class="text-xs text-slate-300">
+                                    <strong>Cara Bermain:</strong> Klik atau seret kartu <em>Nama Struktur</em> di sebelah kiri, lalu pasangkan ke kotak <em>Definisi</em> yang tepat di sebelah kanan!
+                                </p>
+                            </div>
+                            <button onclick="resetMod2Game()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-slate-200">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Acak Ulang
+                            </button>
+                        </div>
+
+                        <div class="grid md:grid-cols-12 gap-4 items-start">
+                            <!-- Left Column: Draggable/Clickable Structure Names -->
+                            <div class="md:col-span-4 space-y-2.5" id="mod2-sources">
+                                <!-- Generated by JS -->
+                            </div>
+
+                            <!-- Right Column: Target Definitions -->
+                            <div class="md:col-span-8 space-y-2.5" id="mod2-targets">
+                                <!-- Generated by JS -->
+                            </div>
+                        </div>
+
+                        <div id="mod2-feedback" class="text-sm font-bold text-center pt-2"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     MODUL 3: UNSUR INTRINSIK TEKS LEGENDA
+                     ========================================== -->
+                <div id="content-mod-3" class="module-section hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold mb-2">
+                                <i class="fa-solid fa-clone"></i>
+                                <span>Eksplorasi Kartu 3D Interaktif</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white">6 Unsur Intrinsik Pembangun Cerita</h3>
+                            <p class="text-xs sm:text-sm text-slate-300">
+                                Klik dan balikkan ke-6 kartu artefak di bawah ini untuk mempelajari penjelasan lengkap setiap unsur intrinsik, lalu jawab pertanyaan tantangan di bawahnya!
+                            </p>
+                        </div>
+                        <div class="px-4 py-2 rounded-xl bg-slate-900 border border-emerald-500/40 text-xs font-bold text-emerald-300">
+                            Kartu Terbuka: <span id="flip-counter">0 / 6</span>
+                        </div>
+                    </div>
+
+                    <!-- 6 Flip Cards Grid -->
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="intrinsic-cards-grid">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Panel Penjelasan Lebih Lanjut: Teknik Penokohan (Analitik & Dramatik) -->
+                    <div id="characterization-detail-box" class="hidden p-5 rounded-2xl bg-slate-900/95 border-2 border-blue-400/80 shadow-2xl space-y-4 transition-all">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400 flex items-center justify-center text-blue-300">
+                                    <i class="fa-solid fa-masks-theater"></i>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500 text-slate-950">Pendalaman Materi</span>
+                                    <h4 class="font-bold text-base sm:text-lg text-white">Cara Penggambaran Watak Tokoh (Penokohan)</h4>
+                                </div>
+                            </div>
+                            <button onclick="closeCharacterizationDetail()" class="text-slate-400 hover:text-rose-400 text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors">
+                                <i class="fa-solid fa-xmark"></i> Tutup Panel
+                            </button>
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Dalam teks legenda, pengarang menggambarkan watak atau karakter tokoh melalui <strong>2 metode utama</strong>, yaitu secara <strong class="text-amber-300">Langsung (Analitik)</strong> dan secara <strong class="text-emerald-300">Tidak Langsung (Dramatik)</strong> seperti melalui dialog, ciri fisik, tindakan, maupun jalan pikiran tokoh. Klik tombol <strong>"Lihat Contoh"</strong> pada masing-masing cara di bawah ini:
+                        </p>
+
+                        <!-- 5 Jenis Teknik Penokohan Cards -->
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <!-- 1. Secara Langsung (Analitik) -->
+                            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-amber-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded bg-amber-500 text-slate-950 uppercase">1. Secara Langsung</span>
+                                    <h5 class="font-bold text-xs sm:text-sm text-amber-200 mt-2">Metode Analitik</h5>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Pengarang menyebutkan secara langsung sifat atau watak tokoh di dalam narasi cerita.
+                                    </p>
+                                </div>
+                                <button onclick="showCharacterizationExample('langsung')" class="mt-3 w-full py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-amber-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-eye"></i> Lihat Contoh
+                                </button>
+                            </div>
+
+                            <!-- 2. Melalui Dialog Antartokoh -->
+                            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-blue-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded bg-blue-500 text-slate-950 uppercase">2. Melalui Dialog</span>
+                                    <h5 class="font-bold text-xs sm:text-sm text-blue-200 mt-2">Percakapan Tokoh</h5>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Watak tokoh diketahui dari cara tokoh berbicara kepada tokoh lain atau ucapan tokoh lain tentang dirinya.
+                                    </p>
+                                </div>
+                                <button onclick="showCharacterizationExample('dialog')" class="mt-3 w-full py-1.5 px-2.5 rounded-lg bg-blue-500/20 hover:bg-blue-500 hover:text-slate-950 text-blue-300 border border-blue-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-eye"></i> Lihat Contoh
+                                </button>
+                            </div>
+
+                            <!-- 3. Melalui Ciri-Ciri Fisik -->
+                            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-purple-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-500 text-white uppercase">3. Ciri-Ciri Fisik</span>
+                                    <h5 class="font-bold text-xs sm:text-sm text-purple-200 mt-2">Postur & Raut Wajah</h5>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Watak digambarkan lewat deskripsi fisik, raut muka, pakaian, atau tatapan mata tokoh.
+                                    </p>
+                                </div>
+                                <button onclick="showCharacterizationExample('fisik')" class="mt-3 w-full py-1.5 px-2.5 rounded-lg bg-purple-500/20 hover:bg-purple-500 hover:text-white text-purple-300 border border-purple-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-eye"></i> Lihat Contoh
+                                </button>
+                            </div>
+
+                            <!-- 4. Melalui Tindakan / Perilaku -->
+                            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-emerald-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500 text-slate-950 uppercase">4. Tindakan Tokoh</span>
+                                    <h5 class="font-bold text-xs sm:text-sm text-emerald-200 mt-2">Tingkah Laku / Aksi</h5>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Watak terlihat dari perbuatan, reaksi, atau kebiasaan yang dilakukan tokoh saat menghadapi sesuatu.
+                                    </p>
+                                </div>
+                                <button onclick="showCharacterizationExample('tindakan')" class="mt-3 w-full py-1.5 px-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 border border-emerald-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-eye"></i> Lihat Contoh
+                                </button>
+                            </div>
+
+                            <!-- 5. Melalui Pikiran & Perasaan -->
+                            <div class="p-3.5 rounded-xl bg-slate-800/90 border border-rose-500/40 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded bg-rose-500 text-white uppercase">5. Pikiran Tokoh</span>
+                                    <h5 class="font-bold text-xs sm:text-sm text-rose-200 mt-2">Perasaan & Batin</h5>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Watak terungkap lewat isi hati, niat tersembunyi, atau gumaman batin tokoh di dalam cerita.
+                                    </p>
+                                </div>
+                                <button onclick="showCharacterizationExample('pikiran')" class="mt-3 w-full py-1.5 px-2.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 hover:text-white text-rose-300 border border-rose-400/50 text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-eye"></i> Lihat Contoh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kotak Tampilan Contoh Kutipan Masing-Masing Penokohan -->
+                        <div id="char-example-display" class="hidden p-4 rounded-xl bg-slate-950/90 border border-amber-400/60 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span id="char-ex-badge" class="px-2.5 py-0.5 rounded text-xs font-black bg-amber-500 text-slate-950">CONTOH</span>
+                                    <h5 id="char-ex-title" class="font-bold text-sm text-amber-300">Judul Contoh Penokohan</h5>
+                                </div>
+                                <button onclick="closeCharacterizationExample()" class="text-xs text-slate-400 hover:text-white">
+                                    <i class="fa-solid fa-xmark"></i> Tutup Contoh
+                                </button>
+                            </div>
+                            <blockquote id="char-ex-quote" class="p-3 rounded-lg bg-slate-800/90 border-l-4 border-amber-400 text-xs sm:text-sm text-slate-100 italic leading-relaxed">
+                            </blockquote>
+                            <div id="char-ex-analysis" class="text-xs text-emerald-300 font-medium flex items-start gap-2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Penjelasan Lebih Lanjut: Alur (Maju & Campuran) dan Latar (Waktu, Tempat, Suasana) -->
+                    <div id="plot-setting-detail-box" class="hidden p-5 rounded-2xl bg-slate-900/95 border-2 border-amber-400/80 shadow-2xl space-y-4 transition-all">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <div id="ps-icon-box" class="w-9 h-9 rounded-xl bg-pink-500/20 border border-pink-400 flex items-center justify-center text-pink-300">
+                                    <i id="ps-icon" class="fa-solid fa-timeline"></i>
+                                </div>
+                                <div>
+                                    <span id="ps-badge" class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded bg-pink-500 text-white">ALUR MAJU</span>
+                                    <h4 id="ps-title" class="font-bold text-base sm:text-lg text-white mt-0.5">Penjelasan Lengkap & Contoh Paragraf</h4>
+                                </div>
+                            </div>
+                            <button onclick="closePlotSettingDetail()" class="text-slate-400 hover:text-rose-400 text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors">
+                                <i class="fa-solid fa-xmark"></i> Tutup Panel
+                            </button>
+                        </div>
+
+                        <div id="ps-explanation" class="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-800/60 p-3.5 rounded-xl border border-slate-700">
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left"></i> Contoh Paragraf dalam Teks Legenda:
+                            </div>
+                            <blockquote id="ps-paragraph" class="p-4 rounded-xl bg-slate-950/90 border-l-4 border-pink-500 text-xs sm:text-sm text-slate-100 italic leading-relaxed">
+                            </blockquote>
+                        </div>
+
+                        <div id="ps-analysis" class="text-xs text-emerald-300 font-medium flex items-start gap-2 pt-1">
+                        </div>
+                    </div>
+
+                    <!-- Panel Penjelasan Lebih Lanjut: Sudut Pandang (Orang Pertama & Orang Ketiga) -->
+                    <div id="pov-detail-box" class="hidden p-5 rounded-2xl bg-slate-900/95 border-2 border-indigo-400/80 shadow-2xl space-y-4 transition-all">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <div id="pov-icon-box" class="w-9 h-9 rounded-xl bg-blue-900/60 border border-blue-400 flex items-center justify-center text-blue-200">
+                                    <i id="pov-icon" class="fa-solid fa-eye"></i>
+                                </div>
+                                <div>
+                                    <span id="pov-badge" class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded bg-blue-900 text-white border border-blue-400">SUDUT PANDANG ORANG PERTAMA</span>
+                                    <h4 id="pov-title" class="font-bold text-base sm:text-lg text-white mt-0.5">Penjelasan Lengkap & Contoh Paragraf</h4>
+                                </div>
+                            </div>
+                            <button onclick="closePovDetail()" class="text-slate-400 hover:text-rose-400 text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors">
+                                <i class="fa-solid fa-xmark"></i> Tutup Panel
+                            </button>
+                        </div>
+
+                        <p id="pov-intro" class="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-800/60 p-3.5 rounded-xl border border-slate-700">
+                        </p>
+
+                        <!-- Grid 2 Sub-Tipe Sudut Pandang -->
+                        <div id="pov-subtypes-grid" class="grid md:grid-cols-2 gap-4">
+                            <!-- Diisi secara dinamis melalui JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Bonus Verification Question for Module 3 -->
+                    <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 space-y-3 mt-4">
+                        <h4 class="font-bold text-amber-300 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Tantangan Cepat Unsur Intrinsik:
+                        </h4>
+                        <p class="text-xs sm:text-sm text-slate-200">
+                            "Di sebuah desa yang damai di kaki Gunung Merapi pada zaman dahulu, hiduplah seorang pemuda jujur bernama Jaka." Kutipan tersebut sangat menonjolkan unsur intrinsik...
+                        </p>
+                        <div class="grid sm:grid-cols-3 gap-2.5">
+                            <button onclick="checkMod3Challenge(0)" class="mod3-opt p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                A. Sudut Pandang Orang Pertama
+                            </button>
+                            <button onclick="checkMod3Challenge(1)" class="mod3-opt p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                B. Latar (Tempat, Waktu, Suasana) & Penokohan
+                            </button>
+                            <button onclick="checkMod3Challenge(2)" class="mod3-opt p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                C. Alur Mundur (Flashback)
+                            </button>
+                        </div>
+                        <div id="mod3-feedback" class="text-xs sm:text-sm font-bold"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     MODUL 4: CIRI KEBAHASAAN TEKS LEGENDA
+                     ========================================== -->
+                <div id="content-mod-4" class="module-section hidden space-y-6">
+                    <div class="space-y-3">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-xs font-bold">
+                            <i class="fa-solid fa-spell-check"></i>
+                            <span>Kaidah Bahasa</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">4 Ciri Kebahasaan Teks Legenda</h3>
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30">
+                                <h4 class="font-bold text-xs text-purple-300 uppercase">1. Kalimat Langsung & Tak Langsung</h4>
+                                <p class="text-xs text-slate-300 mt-1">
+                                    <strong>Kalimat Langsung</strong> memakai tanda petik (<em>"Jangan buka kotak ini!" kata Ibu</em>). <strong>Tak Langsung</strong> menceritakan kembali ucapan tokoh.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-rose-500/30">
+                                <h4 class="font-bold text-xs text-rose-300 uppercase">2. Kata Kerja Tindakan (Action Verbs)</h4>
+                                <p class="text-xs text-slate-300 mt-1">
+                                    Kata kerja yang menunjukkan perbuatan fisik tokoh, seperti: <em>memancing, menendang, berlari, memukul, membangun</em>.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-blue-500/30">
+                                <h4 class="font-bold text-xs text-blue-300 uppercase">3. Keterangan Waktu & Tempat</h4>
+                                <p class="text-xs text-slate-300 mt-1">
+                                    Frasa penunjuk latar, contoh: <em>pada zaman dahulu, di tepi danau, keesokan harinya, di sebuah hutan</em>.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30">
+                                <h4 class="font-bold text-xs text-amber-300 uppercase">4. Konjungsi Urutan Waktu (Kronologis)</h4>
+                                <p class="text-xs text-slate-300 mt-1">
+                                    Kata penghubung penanda urutan kejadian: <em>kemudian, lalu, setelah itu, akhirnya, semenjak itu</em>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini-Game Modul 4: Temukan Ciri Kebahasaan -->
+                    <div class="pt-5 border-t border-slate-700/80 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-magnifying-glass-plus"></i> Mini-Game: Detektif Bahasa Legenda!
+                                </h3>
+                                <p class="text-xs text-slate-300">
+                                    Klik frasa atau kata yang tepat di dalam kutipan kalimat sesuai misi yang diminta! (Total 4 Tantangan)
+                                </p>
+                            </div>
+                            <span id="mod4-progress" class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-xs font-bold">
+                                Tantangan 1 / 4
+                            </span>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-slate-900 border-2 border-amber-500/40 space-y-4">
+                            <div class="flex items-center space-x-2 text-sm sm:text-base font-bold text-amber-300">
+                                <i class="fa-solid fa-bullseye"></i>
+                                <span id="mod4-prompt">Temukan dan klik KATA KERJA TINDAKAN (Action Verb) pada kalimat berikut:</span>
+                            </div>
+
+                            <!-- Interactive tokens container -->
+                            <div id="mod4-sentence-box" class="p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex flex-wrap gap-2 items-center text-base sm:text-lg leading-loose">
+                                <!-- Tokens generated by JS -->
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2">
+                                <div id="mod4-feedback" class="text-xs sm:text-sm font-bold"></div>
+                                <button id="mod4-next-btn" onclick="nextMod4Round()" class="hidden px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm transition-all">
+                                    Lanjut Tantangan Berikutnya <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     MODUL 5: CONTOH TEKS LEGENDA & ANALISIS LENGKAP
+                     ========================================== -->
+                <div id="content-mod-5" class="module-section hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-bold mb-1">
+                                <i class="fa-solid fa-highlighter"></i>
+                                <span>Laboratorium Analisis 3 Teks Legenda</span>
+                            </div>
+                            <h3 id="mod5-story-title" class="text-2xl font-bold text-white">1. Legenda Asal-Usul Danau Toba (Sumatera Utara)</h3>
+                            <p class="text-xs sm:text-sm text-slate-300">
+                                Pilih salah satu dari <strong>3 cerita legenda</strong> di bawah ini, lalu gunakan tombol mode sorot (Highlight) untuk membedah <strong>Struktur Paragraf</strong> dan <strong>Ciri Kebahasaan</strong>!
+                            </p>
+                        </div>
+
+                        <!-- Interactive Highlight Mode Tabs -->
+                        <div class="flex flex-wrap gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-700">
+                            <button id="tab-normal" onclick="setAnalysisMode('normal')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition-all">
+                                <i class="fa-solid fa-book mr-1"></i> Teks Normal
+                            </button>
+                            <button id="tab-struktur" onclick="setAnalysisMode('struktur')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition-all">
+                                <i class="fa-solid fa-layer-group mr-1"></i> Sorot Struktur
+                            </button>
+                            <button id="tab-bahasa" onclick="setAnalysisMode('bahasa')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition-all">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Sorot Kebahasaan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Story Selector Buttons (3 Contoh Legenda) -->
+                    <div class="grid sm:grid-cols-3 gap-2.5 bg-slate-900/90 p-2.5 rounded-2xl border border-slate-700">
+                        <button id="btn-story-toba" onclick="selectLegendStory('toba')" class="p-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-between shadow-lg transition-all">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-water"></i> 1. Legenda Danau Toba</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-slate-950/20 font-black">Sumut</span>
+                        </button>
+                        <button id="btn-story-tangkuban" onclick="selectLegendStory('tangkuban')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs sm:text-sm flex items-center justify-between transition-all">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-mountain"></i> 2. Tangkuban Perahu</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-slate-700 text-amber-300 font-bold">Jabar</span>
+                        </button>
+                        <button id="btn-story-prambanan" onclick="selectLegendStory('prambanan')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs sm:text-sm flex items-center justify-between transition-all">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-gopuram"></i> 3. Candi Prambanan</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-slate-700 text-amber-300 font-bold">DIY/Jateng</span>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Legend Key Bar -->
+                    <div id="legend-key-struktur" class="hidden flex-wrap gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs">
+                        <span class="flex items-center gap-1.5 font-bold text-blue-300"><span class="w-3 h-3 rounded bg-blue-500 inline-block"></span> Orientasi (Pengenalan)</span>
+                        <span class="flex items-center gap-1.5 font-bold text-rose-300"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span> Komplikasi (Konflik/Masalah)</span>
+                        <span class="flex items-center gap-1.5 font-bold text-emerald-300"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Resolusi (Penyelesaian)</span>
+                        <span class="flex items-center gap-1.5 font-bold text-purple-300"><span class="w-3 h-3 rounded bg-purple-500 inline-block"></span> Koda (Pesan/Asal-usul Tempat)</span>
+                    </div>
+
+                    <div id="legend-key-bahasa" class="hidden flex-wrap gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs">
+                        <span class="px-2 py-0.5 rounded bg-blue-300 text-blue-950 font-bold">Keterangan Waktu & Tempat</span>
+                        <span class="px-2 py-0.5 rounded bg-red-300 text-red-950 font-bold">Kata Kerja Tindakan</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-300 text-yellow-950 font-bold">Konjungsi Urutan Waktu</span>
+                        <span class="px-2 py-0.5 rounded bg-purple-300 text-purple-950 font-bold">Kalimat Langsung</span>
+                    </div>
+
+                    <!-- Story Container -->
+                    <div id="story-analysis-box" class="p-5 sm:p-6 rounded-2xl bg-slate-900/95 border border-amber-500/30 space-y-4 text-sm sm:text-base leading-relaxed text-slate-100">
+                        
+                        <!-- CERITA 1: DANAU TOBA -->
+                        <div id="story-content-toba" class="legend-story-item space-y-4">
+                            <div class="hl-orientasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-blue-400">[Paragraf 1: ORIENTASI - Pengenalan Tokoh & Latar]</div>
+                                <span class="hl-time">Pada zaman dahulu</span>, <span class="hl-time">di sebuah desa di wilayah Sumatera Utara</span>, hiduplah seorang petani muda yang rajin bernama Toba. Ia hidup sebatang kara dan bekerja dengan <span class="hl-action">menggarap</span> ladang serta <span class="hl-action">memancing</span> ikan <span class="hl-time">di sungai yang tak jauh dari gubuknya</span>.
+                            </div>
+
+                            <div class="hl-komplikasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-rose-400">[Paragraf 2: KOMPLIKASI - Munculnya Janji & Puncak Konflik]</div>
+                                <span class="hl-time">Suatu sore</span>, Toba berhasil <span class="hl-action">menangkap</span> seekor ikan mas besar yang sisiknya berkilau keemasan. Ajaibnya, ikan itu berubah wujud menjadi seorang putri cantik. Mereka pun menikah dengan satu syarat mutlak. <span class="hl-direct">"Jangan pernah sekalipun Kakanda mengungkit asal-usulku sebagai seekor ikan,"</span> pesan sang istri. Mereka dikaruniai seorang putra bernama Samosir. <span class="hl-time">Pada suatu hari</span>, Samosir diminta <span class="hl-action">mengantarkan</span> bekal makanan untuk ayahnya <span class="hl-time">di ladang</span>. Namun, di tengah perjalanan Samosir merasa lapar, <span class="hl-conj">lalu</span> ia <span class="hl-action">memakan</span> sebagian besar bekal tersebut. Toba yang sedang kelelahan dan lapar menjadi sangat murka, <span class="hl-conj">kemudian</span> ia kehilangan kendali dan <span class="hl-action">berteriak</span>, <span class="hl-direct">"Dasar anak keturunan ikan yang tak tahu diuntung!"</span>
+                            </div>
+
+                            <div class="hl-resolusi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-emerald-400">[Paragraf 3: RESOLUSI - Penyelesaian & Bencana Alam]</div>
+                                Samosir <span class="hl-action">berlari</span> pulang sambil menangis dan <span class="hl-action">menceritakan</span> kejadian itu kepada ibunya. Sang ibu sangat sedih karena Toba telah melanggar sumpahnya. <span class="hl-conj">Seketika itu juga</span>, langit berubah gelap gulita dan hujan deras turun disertai petir menyambar. Air memancar deras dari jejak kaki sang ibu hingga <span class="hl-action">menenggelamkan</span> seluruh lembah desa tersebut.
+                            </div>
+
+                            <div class="hl-koda">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-purple-400">[Paragraf 4: KODA - Asal-Usul Tempat & Pesan Moral]</div>
+                                <span class="hl-conj">Akhirnya</span>, genangan air raksasa itu berubah menjadi sebuah danau yang sangat luas. Masyarakat sekitar menamakannya <strong>Danau Toba</strong>, sedangkan daratan tinggi di tengahnya dinamakan <strong>Pulau Samosir</strong>. Kisah ini mengajarkan kita agar senantiasa menjaga amanah, menepati janji, dan mengendalikan amarah.
+                            </div>
+                        </div>
+
+                        <!-- CERITA 2: GUNUNG TANGKUBAN PERAHU -->
+                        <div id="story-content-tangkuban" class="legend-story-item hidden space-y-4">
+                            <div class="hl-orientasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-blue-400">[Paragraf 1: ORIENTASI - Pengenalan Tokoh & Latar]</div>
+                                <span class="hl-time">Pada zaman dahulu kala</span>, <span class="hl-time">di tanah Parahyangan, Jawa Barat</span>, hiduplah seorang putri berwajah cantik dan awet muda bernama Dayang Sumbi. Ia tinggal <span class="hl-time">di sebuah pondok di tepi hutan</span> bersama putra tunggalnya yang gemar <span class="hl-action">berburu</span>, bernama Sangkuriang, serta seekor anjing setia bernama Tumang.
+                            </div>
+
+                            <div class="hl-komplikasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-rose-400">[Paragraf 2: KOMPLIKASI - Konflik & Syarat Mustahil]</div>
+                                <span class="hl-time">Suatu hari</span>, Dayang Sumbi sangat marah saat mengetahui Tumang tewas, <span class="hl-conj">lalu</span> ia <span class="hl-action">memukul</span> kepala Sangkuriang dengan centong nasi hingga terluka dan pergi mengembara. <span class="hl-time">Bertahun-tahun kemudian</span>, Sangkuriang tumbuh menjadi pemuda sakti dan tanpa sengaja kembali bertemu dengan Dayang Sumbi, <span class="hl-conj">kemudian</span> mereka saling jatuh cinta. Saat melihat bekas luka di kepala Sangkuriang, Dayang Sumbi tersadar bahwa pemuda itu adalah anak kandungnya sendiri. Untuk menggagalkan pernikahan terlarang itu, Dayang Sumbi <span class="hl-action">mengajukan</span> syarat yang sangat berat, <span class="hl-direct">"Bendunglah Sungai Citarum dan buatkan aku sebuah perahu besar dalam waktu satu malam sebelum fajar menyingsing!"</span>
+                            </div>
+
+                            <div class="hl-resolusi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-emerald-400">[Paragraf 3: RESOLUSI - Tipu Daya Fajar & Kemarahan Sangkuriang]</div>
+                                Dengan kesaktiannya, Sangkuriang hampir menyelesaikan telaga dan perahu tersebut <span class="hl-time">menjelang dini hari</span>. Dayang Sumbi yang cemas segera <span class="hl-action">membentangkan</span> kain sutra merah <span class="hl-time">di ufuk timur</span> dan <span class="hl-action">menumbuk</span> lesung padi sehingga ayam-ayam jantan berkokok mengira pagi telah tiba. Merasa dicurangi dan gagal memenuhi syarat, Sangkuriang menjadi sangat murka, <span class="hl-conj">setelah itu</span> ia <span class="hl-action">menendang</span> perahu raksasa buatannya dengan sekuat tenaga hingga terlempar jauh dan terbalik.
+                            </div>
+
+                            <div class="hl-koda">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-purple-400">[Paragraf 4: KODA - Asal-Usul Gunung & Pesan Moral]</div>
+                                <span class="hl-conj">Semenjak itu</span>, perahu besar yang tertelungkup tersebut berubah menjadi sebuah gunung yang kini dikenal dengan nama <strong>Gunung Tangkuban Perahu</strong>. Legenda ini memberikan pesan moral bahwa kejujuran, kesabaran, dan pengendalian emosi sangat penting dalam menghadapi setiap persoalan hidup.
+                            </div>
+                        </div>
+
+                        <!-- CERITA 3: CANDI PRAMBANAN (RORO JONGGRANG) -->
+                        <div id="story-content-prambanan" class="legend-story-item hidden space-y-4">
+                            <div class="hl-orientasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-blue-400">[Paragraf 1: ORIENTASI - Pengenalan Tokoh & Latar Kerajaan]</div>
+                                <span class="hl-time">Pada zaman dahulu</span>, <span class="hl-time">di wilayah Jawa Tengah dan Yogyakarta</span>, berdirilah dua kerajaan besar yang bertetangga, yaitu Kerajaan Pengging dan Kerajaan Baka. Kerajaan Baka dipimpin oleh Raja Prabu Baka yang memiliki seorang putri jelita bernama Roro Jonggrang, sedangkan Kerajaan Pengging memiliki seorang kesatria gagah perkasa lagi sakti mandraguna bernama Bandung Bondowoso.
+                            </div>
+
+                            <div class="hl-komplikasi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-rose-400">[Paragraf 2: KOMPLIKASI - Pinangan & Syarat Seribu Candi]</div>
+                                Dalam sebuah pertempuran sengit, Bandung Bondowoso berhasil <span class="hl-action">mengalahkan</span> Prabu Baka dan <span class="hl-action">menduduki</span> Istana Baka. Saat melihat kecantikan Roro Jonggrang, Bandung Bondowoso langsung jatuh hati dan ingin meminangnya. Roro Jonggrang tidak sudi menikah dengan orang yang telah menewaskan ayahnya, <span class="hl-conj">lalu</span> ia mencari akal untuk menolak secara halus dengan <span class="hl-action">berkata</span>, <span class="hl-direct">"Aku bersedia menerima pinanganmu, asalkan kau sanggup membangun seribu candi dan dua sumur yang dalam hanya dalam waktu satu malam!"</span>
+                            </div>
+
+                            <div class="hl-resolusi">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-emerald-400">[Paragraf 3: RESOLUSI - Gagalnya Seribu Candi & Kutukan Batu]</div>
+                                Bandung Bondowoso menyanggupi syarat itu, <span class="hl-conj">kemudian</span> ia <span class="hl-action">mengerahkan</span> pasukan makhluk halus untuk <span class="hl-action">menyusun</span> batu-batu candi dengan sangat cepat. Ketika jumlah candi telah mencapai 999 buah <span class="hl-time">pada tengah malam</span>, Roro Jonggrang yang panik segera <span class="hl-action">membangunkan</span> para gadis desa untuk <span class="hl-action">membakar</span> jerami dan <span class="hl-action">menumbuk</span> padi. Pasukan makhluk halus pun berhamburan pergi karena mengira matahari sudah terbit. Mengetahui kecurangan Roro Jonggrang, Bandung Bondowoso sangat murka dan <span class="hl-action">mengucapkan</span> kutukan, <span class="hl-direct">"Kau telah menipuku! Maka jadilah engkau arca batu untuk menggenapkan candi yang keseribu!"</span>
+                            </div>
+
+                            <div class="hl-koda">
+                                <div class="struktur-badge hidden mb-1 text-xs font-black uppercase text-purple-400">[Paragraf 4: KODA - Asal-Usul Candi Prambanan & Pesan Moral]</div>
+                                <span class="hl-conj">Akhirnya</span>, tubuh Roro Jonggrang berubah menjadi arca batu yang indah di dalam ruang utama candi. Hingga kini, kompleks candi tersebut dikenal sebagai <strong>Candi Prambanan (Candi Roro Jonggrang)</strong> dan candi di sekitarnya disebut <strong>Candi Sewu</strong>. Kisah ini mengajarkan kita agar tidak mengingkari kesepakatan dengan tipu muslihat serta tidak memaksakan kehendak kepada orang lain.
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Final Verification Quiz for Module 5 -->
+                    <div class="p-4 rounded-2xl bg-slate-900 border border-slate-700 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-amber-300 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-award"></i> Evaluasi Akhir Analisis Teks:
+                            </h4>
+                            <span id="mod5-explore-status" class="text-xs text-slate-400">Eksplorasi kedua tab sorot di atas & jawab soal ini!</span>
+                        </div>
+                        <p id="mod5-quiz-question" class="text-xs sm:text-sm text-slate-200">
+                            Berdasarkan teks <em>Legenda Danau Toba</em> di atas, bagian puncak konflik (Komplikasi) terjadi ketika...
+                        </p>
+                        <div id="mod5-quiz-options" class="grid sm:grid-cols-3 gap-2.5">
+                            <button onclick="checkMod5Quiz(0)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                A. Toba sedang memancing ikan di sungai dekat gubuknya.
+                            </button>
+                            <button onclick="checkMod5Quiz(1)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                B. Toba marah besar dan melanggar janjinya dengan menyebut Samosir sebagai anak keturunan ikan.
+                            </button>
+                            <button onclick="checkMod5Quiz(2)" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left">
+                                C. Lembah desa berubah menjadi danau luas yang dinamakan Danau Toba.
+                            </button>
+                        </div>
+                        <div id="mod5-feedback" class="text-xs sm:text-sm font-bold"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-950/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-star text-yellow-400"></i>
+                    <span id="modal-star-status">Selesaikan aktivitas interaktif di modul ini untuk mendapatkan 3 Bintang!</span>
+                </div>
+                <button onclick="closeModule()" class="text-amber-400 hover:text-amber-300 font-bold">
+                    Tutup & Kembali ke Peta 3D <i class="fa-solid fa-arrow-right-from-bracket ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast / Reward Notification Banner -->
+    <div id="reward-toast" class="fixed top-20 right-5 z-50 hidden transform transition-all duration-300">
+        <div class="glass-panel px-5 py-3.5 rounded-2xl border-2 border-yellow-400 flex items-center space-x-3 shadow-2xl">
+            <div class="w-10 h-10 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center text-xl font-black">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h4 id="toast-title" class="font-bold text-sm text-yellow-300">Modul Selesai!</h4>
+                <p id="toast-desc" class="text-xs text-slate-200">+3 Bintang & +100 XP berhasil diraih!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         JAVASCRIPT: AUDIO, STATE, MINI-GAMES & THREE.JS 3D WORLD
+         ===================================================== -->
+    <script>
+        /* ==========================================
+           1. GAME STATE & WEB AUDIO SYNTHESIZER
+           ========================================== */
+        const gameState = {
+            soundEnabled: true,
+            score: 0,
+            stars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            currentIsland: 1,
+            mod1Answers: { 1: null, 2: null },
+            mod2SelectedSource: null,
+            mod2MatchedCount: 0,
+            mod3FlippedSet: new Set(),
+            mod3QuizSolved: false,
+            mod4Round: 0,
+            mod5CurrentStory: 'toba',
+            mod5ModesVisited: new Set(['normal']),
+            mod5QuizSolved: false
+        };
+
+        const islandData = [
+            { id: 1, name: "Pulau Pengertian", sub: "Konsep & Ciri Legenda", pos: { x: -15, y: 0, z: 7 }, color: 0xf59e0b, monument: "scroll" },
+            { id: 2, name: "Pulau Struktur", sub: "4 Struktur Utama", pos: { x: -8, y: 0, z: -5 }, color: 0x3b82f6, monument: "candi" },
+            { id: 3, name: "Pulau Intrinsik", sub: "6 Unsur Pembangun", pos: { x: 0, y: 0, z: 6 }, color: 0x10b981, monument: "crystal" },
+            { id: 4, name: "Pulau Kebahasaan", sub: "Kaidah Bahasa", pos: { x: 8, y: 0, z: -5 }, color: 0xa855f7, monument: "obelisk" },
+            { id: 5, name: "Gunung Legenda", sub: "Contoh & Analisis Teks", pos: { x: 15, y: 0, z: 6 }, color: 0xf43f5e, monument: "volcano" }
+        ];
+
+        // Synthesized Sound Effects using Web Audio API
+        let audioCtx = null;
+        function playSFX(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(680, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+                    osc.start(now);
+                    osc.stop(now + 0.55);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.22);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                }
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('icon-sound');
+            icon.className = gameState.soundEnabled ? 'fa-solid fa-volume-high text-amber-300' : 'fa-solid fa-volume-xmark text-slate-400';
+            if (gameState.soundEnabled) playSFX('click');
+        }
+
+        function awardModuleStars(modId, starsEarned, bonusXP) {
+            const prevStars = gameState.stars[modId];
+            if (starsEarned > prevStars) {
+                gameState.stars[modId] = starsEarned;
+                gameState.score += bonusXP;
+            }
+            updateHUD();
+            playSFX('success');
+            showToast(`Pulau ${modId} Tuntas!`, `Kamu meraih ${starsEarned} Bintang & Total ${gameState.score} XP!`);
+        }
+
+        function updateHUD() {
+            const totalStars = Object.values(gameState.stars).reduce((a, b) => a + b, 0);
+            document.getElementById('hud-stars').textContent = `${totalStars} / 15`;
+            document.getElementById('hud-score').textContent = `${gameState.score} XP`;
+
+            for (let i = 1; i <= 5; i++) {
+                const count = gameState.stars[i];
+                const dockEl = document.getElementById(`dock-stars-${i}`);
+                if (dockEl) {
+                    let html = '';
+                    for (let s = 1; s <= 3; s++) {
+                        html += `<i class="fa-solid fa-star ${s <= count ? 'text-yellow-400' : 'text-slate-600'}"></i>`;
+                    }
+                    dockEl.innerHTML = html;
+                }
+                const labelStarEl = document.getElementById(`label-stars-${i}`);
+                if (labelStarEl) {
+                    let lhtml = '';
+                    for (let s = 1; s <= 3; s++) {
+                        lhtml += `<i class="fa-solid fa-star ${s <= count ? 'text-yellow-400' : 'text-slate-600'}"></i>`;
+                    }
+                    labelStarEl.innerHTML = lhtml;
+                }
+            }
+
+            if (totalStars === 15) {
+                document.getElementById('completion-badge').classList.remove('hidden');
+            }
+        }
+
+        function showToast(title, desc) {
+            const toast = document.getElementById('reward-toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-desc').textContent = desc;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3800);
+        }
+
+        /* ==========================================
+           2. MODULE NAVIGATION & THEME 3D BACKGROUNDS
+           ========================================== */
+        let modScene, modCamera, modRenderer, modAnimId = null;
+        let modObjects = [];
+
+        function selectIsland(id) {
+            playSFX('click');
+            gameState.currentIsland = id;
+            moveHeroToIsland(id);
+
+            setTimeout(() => {
+                openModule(id);
+            }, 450);
+        }
+
+        function openModule(id) {
+            const info = islandData.find(x => x.id === id);
+            document.getElementById('modal-badge').textContent = `Modul ${id} • ${info.name}`;
+            document.getElementById('modal-title').textContent = info.sub;
+
+            document.querySelectorAll('.module-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`content-mod-${id}`).classList.remove('hidden');
+
+            const overlay = document.getElementById('module-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            initModuleTheme3D(id);
+        }
+
+        function closeModule() {
+            playSFX('click');
+            const overlay = document.getElementById('module-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+
+            if (modAnimId) cancelAnimationFrame(modAnimId);
+            const container = document.getElementById('module-canvas-container');
+            container.innerHTML = '';
+            modObjects = [];
+        }
+
+        /* 3D Theme Background Generator per Module for SMP Students */
+        function initModuleTheme3D(modId) {
+            const container = document.getElementById('module-canvas-container');
+            container.innerHTML = '';
+
+            modScene = new THREE.Scene();
+            modCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            modCamera.position.set(0, 0, 12);
+
+            modRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            modRenderer.setSize(window.innerWidth, window.innerHeight);
+            modRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(modRenderer.domElement);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+            const dir = new THREE.DirectionalLight(0xffeaad, 1.2);
+            dir.position.set(5, 10, 7);
+            modScene.add(ambient, dir);
+
+            modObjects = [];
+
+            if (modId === 1) {
+                // Modul 1: Konsep & Asal-usul (Floating Ancient Scrolls & Golden Artifacts)
+                for (let i = 0; i < 18; i++) {
+                    const geo = i % 2 === 0 ? new THREE.BoxGeometry(1.2, 0.4, 0.8) : new THREE.OctahedronGeometry(0.7, 0);
+                    const mat = new THREE.MeshPhongMaterial({ color: i % 2 === 0 ? 0xf59e0b : 0xd97706, shininess: 80 });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set((Math.random() - 0.5) * 16, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 8 - 4);
+                    modScene.add(mesh);
+                    modObjects.push({ mesh, rotSpeed: { x: Math.random() * 0.02, y: Math.random() * 0.03 }, floatSpeed: 0.008 + Math.random() * 0.01, baseY: mesh.position.y });
+                }
+            } else if (modId === 2) {
+                // Modul 2: 4 Pilar Struktur (Interlocking Candi Stone Blocks / Pillars)
+                for (let i = 0; i < 4; i++) {
+                    const group = new THREE.Group();
+                    for (let l = 0; l < 4; l++) {
+                        const block = new THREE.Mesh(
+                            new THREE.BoxGeometry(1.8, 0.5, 1.8),
+                            new THREE.MeshLambertMaterial({ color: l % 2 === 0 ? 0x3b82f6 : 0x1d4ed8 })
+                        );
+                        block.position.y = l * 0.55 - 1.0;
+                        group.add(block);
+                    }
+                    const angle = (i / 4) * Math.PI * 2;
+                    group.position.set(Math.cos(angle) * 5, Math.sin(angle) * 2.5, -5);
+                    modScene.add(group);
+                    modObjects.push({ group, rotSpeed: 0.012 });
+                }
+            } else if (modId === 3) {
+                // Modul 3: 6 Unsur Intrinsik (Rotating Glowing Crystal Orbs & Floating Stars)
+                for (let i = 0; i < 12; i++) {
+                    const geo = new THREE.IcosahedronGeometry(0.8, 0);
+                    const mat = new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x047857, shininess: 90, wireframe: i % 2 === 0 });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 6 - 3);
+                    modScene.add(mesh);
+                    modObjects.push({ mesh, rotSpeed: { x: 0.01, y: 0.02 }, floatSpeed: 0.01, baseY: mesh.position.y });
+                }
+            } else if (modId === 4) {
+                // Modul 4: Kaidah Kebahasaan (Floating Magical Runes / Letter Cubes)
+                for (let i = 0; i < 15; i++) {
+                    const geo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+                    const mat = new THREE.MeshPhongMaterial({ color: 0xa855f7, shininess: 70 });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set((Math.random() - 0.5) * 16, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7 - 3);
+                    modScene.add(mesh);
+                    modObjects.push({ mesh, rotSpeed: { x: 0.015, y: 0.015 }, floatSpeed: 0.012, baseY: mesh.position.y });
+                }
+            } else if (modId === 5) {
+                // Modul 5: Analisis Teks & Gunung Legenda (3D Volcano Mountain & Lava Sparks)
+                const volcanoGeo = new THREE.ConeGeometry(4.5, 4, 8, 1, true);
+                const volcanoMat = new THREE.MeshLambertMaterial({ color: 0x475569, side: THREE.DoubleSide });
+                const volcano = new THREE.Mesh(volcanoGeo, volcanoMat);
+                volcano.position.set(0, -2, -5);
+                modScene.add(volcano);
+                modObjects.push({ mesh: volcano, rotSpeed: { y: 0.005 } });
+
+                for (let i = 0; i < 15; i++) {
+                    const spark = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+                    spark.position.set((Math.random() - 0.5) * 3, 0.5 + Math.random() * 2, -5 + (Math.random() - 0.5) * 3);
+                    modScene.add(spark);
+                    modObjects.push({ spark, speedY: 0.03 + Math.random() * 0.03 });
+                }
+            }
+
+            function animateModule3D() {
+                modAnimId = requestAnimationFrame(animateModule3D);
+                const t = Date.now() * 0.001;
+
+                modObjects.forEach(obj => {
+                    if (obj.mesh) {
+                        if (obj.rotSpeed) {
+                            if (typeof obj.rotSpeed === 'object') {
+                                obj.mesh.rotation.x += obj.rotSpeed.x;
+                                obj.mesh.rotation.y += obj.rotSpeed.y;
+                            } else {
+                                obj.mesh.rotation.y += obj.rotSpeed;
+                            }
+                        }
+                        if (obj.floatSpeed) {
+                            obj.mesh.position.y = obj.baseY + Math.sin(t * 2 + obj.baseY) * 0.6;
+                        }
+                    }
+                    if (obj.group) {
+                        obj.group.rotation.y += obj.rotSpeed;
+                    }
+                    if (obj.spark) {
+                        obj.spark.position.y += obj.speedY;
+                        if (obj.spark.position.y > 4) obj.spark.position.y = -0.5;
+                    }
+                });
+
+                modRenderer.render(modScene, modCamera);
+            }
+            animateModule3D();
+        }
+
+        /* --- MODUL 1: KUIS PEMAHAMAN --- */
+        function selectQuizOption(qNum, optIdx) {
+            playSFX('click');
+            gameState.mod1Answers[qNum] = optIdx;
+            const btns = document.querySelectorAll(`.q${qNum}-btn`);
+            btns.forEach((btn, idx) => {
+                if (idx === optIdx) {
+                    btn.className = `q${qNum}-btn text-left p-3 rounded-xl bg-amber-500/30 border-2 border-amber-400 text-white font-bold text-xs sm:text-sm transition-all`;
+                } else {
+                    btn.className = `q${qNum}-btn text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-xs sm:text-sm transition-all`;
+                }
+            });
+        }
+
+        function checkMod1Quiz() {
+            const a1 = gameState.mod1Answers[1];
+            const a2 = gameState.mod1Answers[2];
+            const fb = document.getElementById('mod1-feedback');
+
+            if (a1 === null || a2 === null) {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-amber-400"><i class="fa-solid fa-circle-exclamation mr-1"></i> Pilih jawaban untuk Soal 1 dan Soal 2 terlebih dahulu!</span>`;
+                return;
+            }
+
+            if (a1 === 1 && a2 === 2) {
+                fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Luar Biasa! Kedua jawabanmu sangat tepat. Kamu berhak mendapatkan 3 Bintang!</span>`;
+                awardModuleStars(1, 3, 100);
+            } else {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Masih ada jawaban yang kurang tepat. Ingat: Legenda berkaitan erat dengan asal-usul suatu tempat! Coba lagi ya.</span>`;
+            }
+        }
+
+        /* --- MODUL 2: DRAG & DROP / CLICK TO MATCH STRUKTUR --- */
+        const structureExamplesData = {
+            orientasi: {
+                badge: "1. ORIENTASI",
+                badgeClass: "bg-blue-500 text-slate-950",
+                borderClass: "border-blue-400",
+                title: "Contoh Paragraf Orientasi (Legenda Malin Kundang)",
+                paragraph: `"Pada zaman dahulu, di sebuah perkampungan nelayan Pantai Air Manis di Padang, Sumatera Barat, hiduplah seorang janda tua bernama Mande Rubayah bersama anak laki-lakinya yang bernama Malin Kundang. Mande Rubayah sangat menyayangi Malin yang tumbuh menjadi pemuda rajin dan gagah."`,
+                note: "Penjelasan: Paragraf ini memperkenalkan latar waktu (pada zaman dahulu), latar tempat (Pantai Air Manis, Sumatera Barat), serta tokoh utama (Mande Rubayah dan Malin Kundang) sebelum masalah dimulai."
+            },
+            komplikasi: {
+                badge: "2. KOMPLIKASI",
+                badgeClass: "bg-rose-500 text-white",
+                borderClass: "border-rose-400",
+                title: "Contoh Paragraf Komplikasi (Legenda Malin Kundang)",
+                paragraph: `"Bertahun-tahun kemudian, Malin kembali ke kampung halamannya dengan kapal megah bersama istrinya yang cantik. Mande Rubayah berlari memeluknya sambil menangis haru. Namun, Malin merasa malu melihat ibunya yang berpakaian compang-camping, lalu ia mendorong tubuh tua ibunya hingga terjatuh dan membentak, 'Wanita tua miskin! Aku bukan anakmu!'"`,
+                note: "Penjelasan: Paragraf ini menampilkan puncak konflik (klimaks) ketika Malin Kundang durhaka dan tidak mau mengakui ibu kandungnya di depan istrinya."
+            },
+            resolusi: {
+                badge: "3. RESOLUSI",
+                badgeClass: "bg-emerald-500 text-slate-950",
+                borderClass: "border-emerald-400",
+                title: "Contoh Paragraf Resolusi (Legenda Malin Kundang)",
+                paragraph: `"Hati Mande Rubayah hancur berkeping-keping, lalu ia berdoa kepada Tuhan dengan penuh kesedihan. Tak lama setelah kapal Malin berlayar meninggalkan pantai, badai dahsyat disertai petir menyambar kapal megah tersebut hingga hancur berkeping-keping. Tubuh Malin Kundang yang terdampar di tepi pantai perlahan-lahan kaku dan berubah menjadi sebongkah batu."`,
+                note: "Penjelasan: Paragraf ini merupakan penyelesaian dari puncak konflik, di mana kesombongan Malin Kundang berakhir dengan kutukan yang mengubah tubuhnya menjadi batu."
+            },
+            koda: {
+                badge: "4. KODA / REORIENTASI",
+                badgeClass: "bg-purple-500 text-white",
+                borderClass: "border-purple-400",
+                title: "Contoh Paragraf Koda (Legenda Malin Kundang)",
+                paragraph: `"Hingga saat ini, bongkahan batu yang menyerupai sosok manusia bersujud di Pantai Air Manis itu dikenal masyarakat sebagai Batu Malin Kundang. Kisah ini menjadi pengingat bagi kita semua agar selalu berbakti, menghormati, dan menyayangi orang tua dalam keadaan apa pun."`,
+                note: "Penjelasan: Paragraf penutup ini mengaitkan cerita dengan bukti tempat di masa kini (Batu Malin Kundang di Pantai Air Manis) sekaligus menyampaikan pesan moral (amanat)."
+            }
+        };
+
+        function showStructureExample(type) {
+            playSFX('click');
+            const data = structureExamplesData[type];
+            if (!data) return;
+
+            const box = document.getElementById('structure-example-box');
+            const badge = document.getElementById('struct-ex-badge');
+            const title = document.getElementById('struct-ex-title');
+            const paragraph = document.getElementById('struct-ex-paragraph');
+            const note = document.getElementById('struct-ex-note');
+
+            badge.className = `px-2.5 py-1 rounded-md text-xs font-black uppercase ${data.badgeClass}`;
+            badge.textContent = data.badge;
+            title.textContent = data.title;
+            paragraph.className = `p-3.5 rounded-xl bg-slate-800/90 border-l-4 ${data.borderClass} text-xs sm:text-sm text-slate-100 italic leading-relaxed`;
+            paragraph.textContent = data.paragraph;
+            note.innerHTML = `<i class="fa-solid fa-circle-info mt-0.5 text-amber-400"></i><span>${data.note}</span>`;
+
+            box.classList.remove('hidden');
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeStructureExample() {
+            playSFX('click');
+            document.getElementById('structure-example-box').classList.add('hidden');
+        }
+
+        const structurePairs = [
+            { id: 'orientasi', name: '1. Orientasi', color: 'border-blue-400 bg-blue-950/70 text-blue-200', desc: 'Bagian awal cerita yang memperkenalkan tokoh, latar waktu, dan latar tempat sebelum munculnya masalah.' },
+            { id: 'komplikasi', name: '2. Komplikasi', color: 'border-rose-400 bg-rose-950/70 text-rose-200', desc: 'Bagian timbulnya masalah atau konflik yang dihadapi tokoh utama hingga mencapai puncak ketegangan (klimaks).' },
+            { id: 'resolusi', name: '3. Resolusi', color: 'border-emerald-400 bg-emerald-950/70 text-emerald-200', desc: 'Bagian penyelesaian masalah atau meredanya puncak konflik, baik berakhir bahagia maupun berubah menjadi fenomena alam.' },
+            { id: 'koda', name: '4. Koda / Reorientasi', color: 'border-purple-400 bg-purple-950/70 text-purple-200', desc: 'Bagian penutup cerita yang berisi pesan moral (amanat) serta penjelasan asal-usul nama tempat yang terbentuk.' }
+        ];
+
+        function initMod2Game() {
+            gameState.mod2SelectedSource = null;
+            gameState.mod2MatchedCount = 0;
+            document.getElementById('mod2-feedback').innerHTML = '';
+
+            const srcContainer = document.getElementById('mod2-sources');
+            const tgtContainer = document.getElementById('mod2-targets');
+            srcContainer.innerHTML = '';
+            tgtContainer.innerHTML = '';
+
+            structurePairs.forEach(item => {
+                const btn = document.createElement('div');
+                btn.id = `src-${item.id}`;
+                btn.draggable = true;
+                btn.className = `cursor-pointer p-3.5 rounded-xl border-2 ${item.color} font-bold text-sm flex items-center justify-between shadow hover:scale-[1.02] transition-all`;
+                btn.innerHTML = `<span>${item.name}</span><i class="fa-solid fa-grip-lines text-xs opacity-70"></i>`;
+                
+                btn.onclick = () => selectMod2Source(item.id);
+                btn.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                    selectMod2Source(item.id);
+                };
+                srcContainer.appendChild(btn);
+            });
+
+            const shuffled = [...structurePairs].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const slot = document.createElement('div');
+                slot.id = `tgt-${item.id}`;
+                slot.className = `p-3.5 rounded-xl bg-slate-900/90 border-2 border-dashed border-slate-600 hover:border-amber-400 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3`;
+                slot.innerHTML = `
+                    <p class="text-xs sm:text-sm text-slate-200 flex-1">${item.desc}</p>
+                    <div id="slot-badge-${item.id}" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold whitespace-nowrap text-center border border-slate-700">
+                        Klik / Letakkan Struktur di Sini
+                    </div>
+                `;
+                slot.onclick = () => tryMatchMod2(item.id);
+                slot.ondragover = (e) => e.preventDefault();
+                slot.ondrop = (e) => {
+                    e.preventDefault();
+                    const draggedId = e.dataTransfer.getData('text/plain');
+                    if (draggedId) {
+                        gameState.mod2SelectedSource = draggedId;
+                        tryMatchMod2(item.id);
+                    }
+                };
+                tgtContainer.appendChild(slot);
+            });
+        }
+
+        function selectMod2Source(id) {
+            const el = document.getElementById(`src-${id}`);
+            if (el.dataset.matched === 'true') return;
+            playSFX('click');
+            gameState.mod2SelectedSource = id;
+
+            structurePairs.forEach(p => {
+                const s = document.getElementById(`src-${p.id}`);
+                if (s && s.dataset.matched !== 'true') {
+                    s.classList.remove('ring-4', 'ring-amber-400');
+                }
+            });
+            el.classList.add('ring-4', 'ring-amber-400');
+        }
+
+        function tryMatchMod2(targetId) {
+            const fb = document.getElementById('mod2-feedback');
+            if (!gameState.mod2SelectedSource) {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-amber-400">Pilih salah satu kartu Nama Struktur di sebelah kiri terlebih dahulu!</span>`;
+                return;
+            }
+
+            const tgtEl = document.getElementById(`tgt-${targetId}`);
+            if (tgtEl.dataset.matched === 'true') return;
+
+            if (gameState.mod2SelectedSource === targetId) {
+                playSFX('click');
+                const pairInfo = structurePairs.find(p => p.id === targetId);
+                const srcEl = document.getElementById(`src-${targetId}`);
+                srcEl.dataset.matched = 'true';
+                srcEl.className = 'p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/30 text-emerald-400 font-bold text-sm flex items-center justify-between opacity-50 pointer-events-none';
+                srcEl.innerHTML = `<span>${pairInfo.name}</span><i class="fa-solid fa-check"></i>`;
+
+                tgtEl.dataset.matched = 'true';
+                tgtEl.className = 'p-3.5 rounded-xl bg-emerald-950/40 border-2 border-emerald-500 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+                const badge = document.getElementById(`slot-badge-${targetId}`);
+                badge.className = 'px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-xs font-extrabold whitespace-nowrap';
+                badge.innerHTML = `<i class="fa-solid fa-check mr-1"></i> ${pairInfo.name}`;
+
+                gameState.mod2SelectedSource = null;
+                gameState.mod2MatchedCount++;
+
+                if (gameState.mod2MatchedCount === 4) {
+                    fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-trophy mr-1"></i> Sempurna! Keempat struktur teks legenda berhasil dipasangkan dengan benar!</span>`;
+                    awardModuleStars(2, 3, 120);
+                } else {
+                    fb.innerHTML = `<span class="text-emerald-300">Cocok! Lanjutkan memasangkan struktur yang tersisa (${gameState.mod2MatchedCount}/4).</span>`;
+                }
+            } else {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Pasangan belum tepat! Baca kembali kata kunci definisinya dengan teliti.</span>`;
+            }
+        }
+
+        function resetMod2Game() {
+            playSFX('click');
+            initMod2Game();
+        }
+
+        /* --- MODUL 3: FLIP CARDS UNSUR INTRINSIK --- */
+        const intrinsicData = [
+            { id: 1, title: "1. Tema", icon: "fa-lightbulb", color: "from-amber-500 to-orange-600", summary: "Gagasan Pokok Cerita", detail: "Ide atau gagasan dasar yang menjiwai seluruh cerita legenda. Contohnya: akibat melanggar janji, bakti anak kepada orang tua, atau kesombongan yang membawa petaka." },
+            { id: 2, title: "2. Tokoh & Penokohan", icon: "fa-masks-theater", color: "from-blue-500 to-indigo-600", summary: "Pelaku & Watak Karakter", detail: "Tokoh adalah pelaku cerita, sedangkan Penokohan adalah cara pengarang menggambarkan watak tokoh (secara langsung, melalui dialog, ciri fisik, tindakan, dll).", actionType: "penokohan" },
+            { id: 3, title: "3. Alur (Plot)", icon: "fa-timeline", color: "from-emerald-500 to-teal-600", summary: "Rangkaian Peristiwa", detail: "Urutan jalannya peristiwa yang memiliki hubungan sebab-akibat. Klik tombol di bawah untuk melihat penjelasan Alur Maju & Alur Campuran:", actionType: "alur" },
+            { id: 4, title: "4. Latar (Setting)", icon: "fa-mountain-city", color: "from-purple-500 to-fuchsia-600", summary: "Tempat, Waktu, Suasana", detail: "Keterangan mengenai waktu, tempat lokasi kejadian, serta suasana di dalam cerita. Klik 3 tombol di bawah untuk melihat contohnya:", actionType: "latar" },
+            { id: 5, title: "5. Sudut Pandang", icon: "fa-eye", color: "from-rose-500 to-pink-600", summary: "Posisi Pengarang (POV)", detail: "Cara pengarang menempatkan dirinya di dalam cerita. Klik tombol Navy (Orang ke-1) atau Merah (Orang ke-3) di bawah ini:", actionType: "pov" },
+            { id: 6, title: "6. Amanat", icon: "fa-hand-holding-heart", color: "from-cyan-500 to-blue-600", summary: "Pesan Moral Luhur", detail: "Ajaran kebaikan atau nilai moral yang ingin disampaikan leluhur kepada pembaca, misalnya pentingnya menepati janji dan menghormati orang tua." }
+        ];
+
+        const povExamplesData = {
+            orang_pertama: {
+                badge: "SUDUT PANDANG ORANG PERTAMA",
+                badgeClass: "bg-[#1e3a8a] text-white border border-blue-400",
+                boxBorder: "border-blue-500/80",
+                iconStyle: "bg-[#1e3a8a] border-blue-400 text-blue-200",
+                title: "Sudut Pandang Orang Pertama (Kata Ganti: Aku, Saya, Beta, Kami)",
+                intro: "Dalam <strong>Sudut Pandang Orang Pertama</strong>, pengarang seolah-olah masuk ke dalam cerita dan terlibat langsung sebagai tokoh yang mengisahkan pengalamannya sendiri menggunakan kata ganti <em>\"Aku\"</em> atau <em>\"Saya\"</em>. Sudut pandang ini terbagi menjadi <strong>2 jenis</strong>:",
+                subtypes: [
+                    {
+                        subBadge: "1. Orang Pertama Pelaku Utama",
+                        subBadgeClass: "bg-[#1e3a8a] text-blue-100 border border-blue-400",
+                        borderClass: "border-blue-400",
+                        desc: "Tokoh <strong>'Aku'</strong> adalah pusat cerita (tokoh utama) yang mengalami langsung seluruh konflik, rintangan, dan penyelesaian dari awal hingga akhir cerita.",
+                        paragraph: `"Aku mengayuh sampanku ke tengah sungai dengan hati berdebar-debar. Sudah sejak pagi buta aku menebar jala, namun belum seekor ikan pun tersangkut. Ketika kutarik jalaku untuk terakhir kalinya, betapa terkejutnya aku melihat seekor ikan mas raksasa bersisik kilau keemasan menatapku dan tiba-tiba berbicara kepadaku."`,
+                        analysis: "Ciri Utama: Kata ganti 'Aku' menjadi tokoh sentral (Toba) yang mengalami sendiri keajaiban di dalam cerita."
+                    },
+                    {
+                        subBadge: "2. Orang Pertama Pelaku Sampingan",
+                        subBadgeClass: "bg-indigo-950 text-indigo-200 border border-indigo-400",
+                        borderClass: "border-indigo-400",
+                        desc: "Tokoh <strong>'Aku'</strong> hadir di dalam cerita hanya sebagai saksi atau tokoh pendamping (sahabat, tetangga, pengawal) yang menceritakan kisah hidup tokoh utama.",
+                        paragraph: `"Aku hanyalah seorang nelayan tua yang tinggal bersebelahan dengan gubuk Mande Rubayah. Dari balik jendela kayu rumahku di tepi Pantai Air Manis, aku menyaksikan sendiri bagaimana sahabatku itu setiap hari menangis menatap lautan luas, menantikan kepulangan putra semata wayangnya, Malin Kundang, yang telah lama merantau."`,
+                        analysis: "Ciri Utama: Tokoh 'Aku' berada di dalam cerita (sebagai tetangga), tetapi fokus utama cerita tetaplah pada sosok Mande Rubayah dan Malin Kundang."
+                    }
+                ]
+            },
+            orang_ketiga: {
+                badge: "SUDUT PANDANG ORANG KETIGA",
+                badgeClass: "bg-red-600 text-white border border-red-300",
+                boxBorder: "border-red-500/80",
+                iconStyle: "bg-red-600/20 border-red-400 text-red-300",
+                title: "Sudut Pandang Orang Ketiga (Kata Ganti: Ia, Dia, Mereka, atau Nama Tokoh)",
+                intro: "Dalam <strong>Sudut Pandang Orang Ketiga</strong>, pengarang berada di luar cerita dan mengisahkan peristiwa dengan menyebut <strong>nama tokoh</strong> (seperti <em>Sangkuriang, Roro Jonggrang, Toba</em>) atau kata ganti <em>\"Ia\", \"Dia\", \"Mereka\"</em>. Sudut pandang ini terbagi menjadi <strong>2 jenis</strong>:",
+                subtypes: [
+                    {
+                        subBadge: "1. Orang Ketiga Maha Tahu (Serba Tahu)",
+                        subBadgeClass: "bg-red-600 text-white",
+                        borderClass: "border-red-500",
+                        desc: "Pencerita mengetahui <strong>segala hal</strong> tentang semua tokoh, termasuk <strong>isi pikiran, perasaan terdalam, rahasia hati, hingga masa lalu dan masa depan</strong> setiap tokohnya.",
+                        paragraph: `"Bandung Bondowoso menatap Roro Jonggrang dengan perasaan cinta yang membuncah di dadanya, tanpa menyadari bahwa di dalam lubuk hati sang putri sedang berkecamuk rasa benci dan dendam yang mendalam. Diam-diam, di dalam benaknya Roro Jonggrang sedang menyusun siasat licik untuk menggagalkan syarat seribu candi yang ia ajukan sendiri."`,
+                        analysis: "Ciri Utama: Pengarang mampu menembus pikiran dan perasaan batin kedua tokoh sekaligus (tahu isi hati Bandung Bondowoso sekaligus rencana rahasia di benak Roro Jonggrang)."
+                    },
+                    {
+                        subBadge: "2. Orang Ketiga Terbatas (Pengamat)",
+                        subBadgeClass: "bg-rose-700 text-white",
+                        borderClass: "border-rose-400",
+                        desc: "Pencerita hanya melaporkan <strong>apa yang tampak oleh mata dan terdengar oleh telinga</strong> (seperti kamera pengamat) atau hanya terbatas mengikuti sudut pandang satu tokoh saja tanpa tahu isi hati tokoh lainnya.",
+                        paragraph: `"Sangkuriang melangkah mendekati Dayang Sumbi sambil menyerahkan hasil buruannya. Perempuan itu terdiam cukup lama. Tiba-tiba raut wajah Dayang Sumbi berubah pucat saat matanya tertuju pada goresan luka di kepala pemuda itu. Tanpa mengucapkan sepatah kata pun, ia berbalik badan dan masuk ke dalam rumah."`,
+                        analysis: "Ciri Utama: Pengarang hanya mendeskripsikan tindakan fisik dan ekspresi luar yang terlihat (wajah berubah pucat, terdiam, berbalik badan) tanpa menjelaskan secara langsung apa yang sedang dipikirkan di dalam batin tokoh."
+                    }
+                ]
+            }
+        };
+
+        function openPovDetail(type, event) {
+            if (event) event.stopPropagation();
+            playSFX('click');
+            const data = povExamplesData[type];
+            if (!data) return;
+
+            document.getElementById('characterization-detail-box').classList.add('hidden');
+            document.getElementById('plot-setting-detail-box').classList.add('hidden');
+
+            const box = document.getElementById('pov-detail-box');
+            box.className = `p-5 rounded-2xl bg-slate-900/95 border-2 ${data.boxBorder} shadow-2xl space-y-4 transition-all`;
+
+            document.getElementById('pov-icon-box').className = `w-9 h-9 rounded-xl border flex items-center justify-center ${data.iconStyle}`;
+            const badge = document.getElementById('pov-badge');
+            badge.className = `text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded ${data.badgeClass}`;
+            badge.textContent = data.badge;
+
+            document.getElementById('pov-title').textContent = data.title;
+            document.getElementById('pov-intro').innerHTML = data.intro;
+
+            const grid = document.getElementById('pov-subtypes-grid');
+            grid.innerHTML = '';
+
+            data.subtypes.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl bg-slate-800/90 border border-slate-700 flex flex-col justify-between space-y-3';
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <span class="inline-block text-[11px] font-black uppercase px-2.5 py-1 rounded-md ${sub.subBadgeClass}">
+                            ${sub.subBadge}
+                        </span>
+                        <p class="text-xs text-slate-200 leading-relaxed">${sub.desc}</p>
+                        <div class="pt-1">
+                            <div class="text-[11px] font-bold text-amber-300 mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-quote-left"></i> Contoh Paragraf:
+                            </div>
+                            <blockquote class="p-3 rounded-lg bg-slate-950/90 border-l-4 ${sub.borderClass} text-xs text-slate-100 italic leading-relaxed">
+                                ${sub.paragraph}
+                            </blockquote>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-emerald-300 font-medium flex items-start gap-1.5 pt-2 border-t border-slate-700/70">
+                        <i class="fa-solid fa-circle-check mt-0.5 text-amber-400"></i>
+                        <span>${sub.analysis}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            box.classList.remove('hidden');
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closePovDetail() {
+            playSFX('click');
+            document.getElementById('pov-detail-box').classList.add('hidden');
+        }
+
+        const plotAndSettingExamples = {
+            alur_maju: {
+                badge: "ALUR MAJU (PROGRESIF)",
+                badgeClass: "bg-pink-500 text-white",
+                borderClass: "border-pink-500",
+                boxBorder: "border-pink-400/80",
+                icon: "fa-arrow-trend-up",
+                iconStyle: "bg-pink-500/20 border-pink-400 text-pink-300",
+                title: "Penjelasan Alur Maju & Contoh Paragrafnya",
+                explanation: "<strong>Alur Maju (Kronologis/Progresif)</strong> adalah alur cerita yang peristiwanya disajikan secara berurutan dari masa awal menuju masa depan. Urutannya dimulai dari <em>pengenalan tokoh &rarr; munculnya masalah &rarr; puncak konflik &rarr; penyelesaian &rarr; penutup</em> tanpa ada kisah kilas balik.",
+                paragraph: `"Pada zaman dahulu, hiduplah seorang pemuda miskin bernama Malin Kundang bersama ibunya. Ketika beranjak dewasa, Malin meminta izin merantau ke seberang lautan demi mengubah nasib. Bertahun-tahun kemudian, ia berhasil menjadi saudagar kaya raya dan kembali ke kampung halamannya. Namun, saat ibunya yang tua renta datang memeluknya, Malin justru mendorong dan mengingkari ibunya hingga akhirnya ia dikutuk menjadi batu."`,
+                analysis: "Analisis Alur: Peristiwa berjalan maju secara berurutan sesuai urutan waktu: dari masa muda Malin di desa, berangkat merantau, menjadi kaya raya, hingga peristiwa kutukan."
+            },
+            alur_campuran: {
+                badge: "ALUR CAMPURAN (MAJU-MUNDUR)",
+                badgeClass: "bg-yellow-400 text-slate-950",
+                borderClass: "border-yellow-400",
+                boxBorder: "border-yellow-400/80",
+                icon: "fa-shuffle",
+                iconStyle: "bg-yellow-400/20 border-yellow-400 text-yellow-300",
+                title: "Penjelasan Lengkap Alur Campuran & Contoh Paragrafnya",
+                explanation: "<strong>Alur Campuran (Maju-Mundur)</strong> adalah gabungan antara alur maju dan alur mundur (<em>flashback</em>). Cerita berjalan maju, lalu di tengah cerita tokoh mengingat kembali atau menceritakan peristiwa masa lalu untuk menjelaskan sebab-akibat.",
+                paragraph: `"Dayang Sumbi menatap penuh kecemasan ke arah pemuda gagah bernama Sangkuriang yang baru saja melamarnya. Saat ia merapikan ikat kepala pemuda itu, matanya terbelalak melihat bekas luka memanjang di kepalanya. Seketika ingatan Dayang Sumbi melayang kembali ke belasan tahun silam, ketika ia memukul kepala putranya sendiri dengan centong nasi. Tersadar dari lamunan masa lalunya, Dayang Sumbi pun mencari akal untuk menggagalkan pernikahan terlarang tersebut."`,
+                analysis: "Analisis Alur: Cerita berlangsung di masa kini (melamar), lalu mundur ke masa silam (kilas balik dipukul centong nasi), kemudian kembali maju ke masa kini."
+            },
+            latar_waktu: {
+                badge: "LATAR WAKTU",
+                badgeClass: "bg-emerald-500 text-slate-950",
+                borderClass: "border-emerald-500",
+                boxBorder: "border-emerald-400/80",
+                icon: "fa-clock",
+                iconStyle: "bg-emerald-500/20 border-emerald-400 text-emerald-300",
+                title: "Penjelasan Latar Waktu & Contoh Paragrafnya",
+                explanation: "<strong>Latar Waktu</strong> adalah keterangan mengenai kapan peristiwa di dalam cerita legenda itu terjadi (misalnya <em>pada zaman dahulu kala, pagi hari, tengah malam</em>).",
+                paragraph: `"Pada zaman dahulu kala, saat musim kemarau panjang melanda tanah Jawa, warga desa berkumpul sejak pagi buta hingga matahari tepat berada di atas kepala. Ketika malam mulai larut dan bulan purnama bersinar terang, barulah pertapa tua itu turun dari gunung."`,
+                analysis: "Bukti Latar Waktu dalam Paragraf: 'Pada zaman dahulu kala', 'musim kemarau panjang', 'sejak pagi buta', dan 'ketika malam mulai larut'."
+            },
+            latar_tempat: {
+                badge: "LATAR TEMPAT",
+                badgeClass: "bg-blue-500 text-white",
+                borderClass: "border-blue-500",
+                boxBorder: "border-blue-400/80",
+                icon: "fa-location-dot",
+                iconStyle: "bg-blue-500/20 border-blue-400 text-blue-300",
+                title: "Penjelasan Latar Tempat & Contoh Paragrafnya",
+                explanation: "<strong>Latar Tempat</strong> adalah keterangan mengenai lokasi atau tempat terjadinya peristiwa dalam cerita legenda (nama daerah, gunung, sungai, hutan, dll).",
+                paragraph: `"Di sebuah lembah hijau di wilayah Sumatera Utara, Toba tinggal di dalam gubuk kayu sederhana yang berdiri tak jauh dari tepian sungai berair jernih. Setiap hari ia berjalan menyusuri pematang ladang dan mencari kayu bakar di pinggir hutan belantara."`,
+                analysis: "Bukti Latar Tempat dalam Paragraf: 'di sebuah lembah hijau di wilayah Sumatera Utara', 'di dalam gubuk kayu sederhana', 'tepian sungai', dan 'pinggir hutan belantara'."
+            },
+            latar_suasana: {
+                badge: "LATAR SUASANA",
+                badgeClass: "bg-red-500 text-white",
+                borderClass: "border-red-500",
+                boxBorder: "border-red-400/80",
+                icon: "fa-cloud-bolt",
+                iconStyle: "bg-red-500/20 border-red-400 text-red-300",
+                title: "Penjelasan Latar Suasana & Contoh Paragrafnya",
+                explanation: "<strong>Latar Suasana</strong> adalah gambaran keadaan emosional atau situasi batin yang menyelimuti peristiwa (seperti <em>menegangkan, mencekam, mengharukan</em>).",
+                paragraph: `"Seketika langit berubah gelap gulita, angin badai menderu kencang, dan suara petir menyambar-nyambar memekakkan telinga. Seluruh warga berlarian dengan wajah pucat pasi penuh kepanikan dan ketakutan, sementara tangis pilu sang ibu terdengar menyayat hati."`,
+                analysis: "Bukti Latar Suasana dalam Paragraf: Menggambarkan suasana yang sangat mencekam, menegangkan, dan mengharukan."
+            }
+        };
+
+        function openPlotSettingDetail(type, event) {
+            if (event) event.stopPropagation();
+            playSFX('click');
+            document.getElementById('characterization-detail-box').classList.add('hidden');
+            document.getElementById('pov-detail-box').classList.add('hidden');
+
+            const box = document.getElementById('plot-setting-detail-box');
+            box.className = `p-5 rounded-2xl bg-slate-900/95 border-2 ${data.boxBorder} shadow-2xl space-y-4 transition-all`;
+
+            const data = plotAndSettingExamples[type];
+            if (!data) return;
+
+            const iconBox = document.getElementById('ps-icon-box');
+            iconBox.className = `w-9 h-9 rounded-xl border flex items-center justify-center ${data.iconStyle}`;
+            document.getElementById('ps-icon').className = `fa-solid ${data.icon}`;
+
+            const badge = document.getElementById('ps-badge');
+            badge.className = `text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded ${data.badgeClass}`;
+            badge.textContent = data.badge;
+
+            document.getElementById('ps-title').textContent = data.title;
+            document.getElementById('ps-explanation').innerHTML = data.explanation;
+
+            const para = document.getElementById('ps-paragraph');
+            para.className = `p-4 rounded-xl bg-slate-950/90 border-l-4 ${data.borderClass} text-xs sm:text-sm text-slate-100 italic leading-relaxed`;
+            para.textContent = data.paragraph;
+
+            document.getElementById('ps-analysis').innerHTML = `<i class="fa-solid fa-circle-check mt-0.5 text-amber-400"></i><span>${data.analysis}</span>`;
+
+            box.classList.remove('hidden');
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closePlotSettingDetail() {
+            playSFX('click');
+            document.getElementById('plot-setting-detail-box').classList.add('hidden');
+        }
+
+        const characterizationExamples = {
+            langsung: {
+                badge: "1. SECARA LANGSUNG (ANALITIK)",
+                badgeClass: "bg-amber-500 text-slate-950",
+                borderClass: "border-amber-400",
+                title: "Contoh Penokohan Secara Langsung",
+                quote: `"Di sebuah kerajaan di Jawa Barat, hiduplah seorang putri bernama Purbasari yang sangat baik hati, lembut, penyabar, dan suka menolong rakyat kecil. Sebaliknya, kakaknya yang bernama Purbararang memiliki sifat yang pendengki, serakah, dan sombong."`,
+                analysis: "Analisis Watak: Pengarang langsung menyebutkan sifat tokoh secara eksplisit di dalam kalimat (baik hati, penyabar, pendengki, serakah, dan sombong)."
+            },
+            dialog: {
+                badge: "2. MELALUI DIALOG ANTARTOKOH",
+                badgeClass: "bg-blue-500 text-slate-950",
+                borderClass: "border-blue-400",
+                title: "Contoh Penokohan Melalui Dialog",
+                quote: `"Pergilah kau dari kapalku, wanita tua compang-camping! Aku tidak mungkin memiliki ibu miskin dan kotor sepertimu!" bentak Malin Kundang di hadapan istrinya.`,
+                analysis: "Analisis Watak: Pembaca langsung mengetahui bahwa Malin Kundang berwatak angkuh, kasar, dan durhaka melalui kalimat ucapannya."
+            },
+            fisik: {
+                badge: "3. MELALUI CIRI-CIRI FISIK TOKOH",
+                badgeClass: "bg-purple-500 text-white",
+                borderClass: "border-purple-400",
+                title: "Contoh Penokohan Melalui Ciri Fisik",
+                quote: `"Raksasa Buto Ijo itu bertubuh tinggi besar bak pohon beringin, matanya merah melotot tajam, taringnya mencuat keluar, dan suaranya menggelegar membuat siapa pun yang melihatnya gemetar ketakutan."`,
+                analysis: "Analisis Watak: Penggambaran ciri fisik menunjukkan karakter tokoh yang buas, menyeramkan, dan beringas."
+            },
+            tindakan: {
+                badge: "4. MELALUI TINDAKAN / PERILAKU TOKOH",
+                badgeClass: "bg-emerald-500 text-slate-950",
+                borderClass: "border-emerald-400",
+                title: "Contoh Penokohan Melalui Tindakan Tokoh",
+                quote: `"Setiap pagi sebelum matahari terbit, Jaka Tarub sudah berangkat ke ladang, membantu ibunya menimba air di sumur, dan membagikan sebagian hasil panennya kepada tetangga yang kelaparan."`,
+                analysis: "Analisis Watak: Melalui perbuatan dan kebiasaan tokoh, disimpulkan bahwa tokoh tersebut berwatak rajin, berbakti, dan dermawan."
+            },
+            pikiran: {
+                badge: "5. MELALUI PIKIRAN & PERASAAN TOKOH",
+                badgeClass: "bg-rose-500 text-white",
+                borderClass: "border-rose-400",
+                title: "Contoh Penokohan Melalui Pikiran Tokoh",
+                quote: `"Roro Jonggrang berjalan mondar-mandir dengan gelisah di halaman candi. 'Aku tidak sudi menikah dengan Bandung Bondowoso. Aku harus mencari akal untuk menggagalkan pembangunan seribu candi ini!' bisiknya di dalam hati."`,
+                analysis: "Analisis Watak: Melalui isi pikiran dan gejolak batinnya, terlihat bahwa Roro Jonggrang memiliki watak cerdik namun nekat menghalalkan tipu muslihat."
+            }
+        };
+
+        function openCharacterizationDetail(event) {
+            if (event) event.stopPropagation();
+            playSFX('click');
+            document.getElementById('plot-setting-detail-box').classList.add('hidden');
+            document.getElementById('pov-detail-box').classList.add('hidden');
+            const box = document.getElementById('characterization-detail-box');
+            box.classList.remove('hidden');
+            showCharacterizationExample('langsung');
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeCharacterizationDetail() {
+            playSFX('click');
+            document.getElementById('characterization-detail-box').classList.add('hidden');
+        }
+
+        function showCharacterizationExample(type) {
+            playSFX('click');
+            const data = characterizationExamples[type];
+            if (!data) return;
+
+            const display = document.getElementById('char-example-display');
+            const badge = document.getElementById('char-ex-badge');
+            const title = document.getElementById('char-ex-title');
+            const quote = document.getElementById('char-ex-quote');
+            const analysis = document.getElementById('char-ex-analysis');
+
+            badge.className = `px-2.5 py-0.5 rounded text-xs font-black uppercase ${data.badgeClass}`;
+            badge.textContent = data.badge;
+            title.textContent = data.title;
+            quote.className = `p-3 rounded-lg bg-slate-800/90 border-l-4 ${data.borderClass} text-xs sm:text-sm text-slate-100 italic leading-relaxed`;
+            quote.textContent = data.quote;
+            analysis.innerHTML = `<i class="fa-solid fa-lightbulb mt-0.5 text-amber-400"></i><span>${data.analysis}</span>`;
+
+            display.classList.remove('hidden');
+        }
+
+        function closeCharacterizationExample() {
+            playSFX('click');
+            document.getElementById('char-example-display').classList.add('hidden');
+        }
+
+        function initMod3Cards() {
+            const grid = document.getElementById('intrinsic-cards-grid');
+            grid.innerHTML = '';
+            intrinsicData.forEach(card => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'perspective-1000 h-56 cursor-pointer';
+                wrapper.onclick = () => flipCard(card.id);
+
+                let extraBtnHtml = `<span class="text-[10px] text-amber-300 text-right font-semibold">Klik kartu untuk membalik kembali</span>`;
+
+                if (card.actionType === "penokohan") {
+                    extraBtnHtml = `
+                        <button onclick="openCharacterizationDetail(event)" class="mt-2 w-full py-1.5 px-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-extrabold text-[11px] transition-all flex items-center justify-center gap-1.5 shadow-md">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> Penjelasan Lanjut & Contoh Penokohan
+                        </button>
+                    `;
+                } else if (card.actionType === "alur") {
+                    extraBtnHtml = `
+                        <div class="grid grid-cols-2 gap-1.5 mt-2">
+                            <button onclick="openPlotSettingDetail('alur_maju', event)" class="py-1.5 px-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-extrabold text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-forward"></i> Alur Maju
+                            </button>
+                            <button onclick="openPlotSettingDetail('alur_campuran', event)" class="py-1.5 px-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-shuffle"></i> Alur Campuran
+                            </button>
+                        </div>
+                    `;
+                } else if (card.actionType === "latar") {
+                    extraBtnHtml = `
+                        <div class="grid grid-cols-3 gap-1.5 mt-2">
+                            <button onclick="openPlotSettingDetail('latar_waktu', event)" class="py-1.5 px-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-clock"></i> Waktu
+                            </button>
+                            <button onclick="openPlotSettingDetail('latar_tempat', event)" class="py-1.5 px-1.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-location-dot"></i> Tempat
+                            </button>
+                            <button onclick="openPlotSettingDetail('latar_suasana', event)" class="py-1.5 px-1.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-extrabold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-cloud-bolt"></i> Suasana
+                            </button>
+                        </div>
+                    `;
+                } else if (card.actionType === "pov") {
+                    extraBtnHtml = `
+                        <div class="grid grid-cols-2 gap-1.5 mt-2">
+                            <button onclick="openPovDetail('orang_pertama', event)" class="py-1.5 px-2 rounded-xl bg-[#1e3a8a] hover:bg-blue-800 border border-blue-400 text-white font-extrabold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-user"></i> Orang Pertama
+                            </button>
+                            <button onclick="openPovDetail('orang_ketiga', event)" class="py-1.5 px-2 rounded-xl bg-red-600 hover:bg-red-500 border border-red-300 text-white font-extrabold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-1 shadow-md">
+                                <i class="fa-solid fa-users"></i> Orang Ketiga
+                            </button>
+                        </div>
+                    `;
+                }
+
+                wrapper.innerHTML = `
+                    <div id="flip-inner-${card.id}" class="relative w-full h-full transform-style-3d">
+                        <!-- Front -->
+                        <div class="absolute inset-0 backface-hidden rounded-2xl bg-slate-900 border-2 border-amber-500/40 hover:border-amber-400 p-4 flex flex-col items-center justify-center text-center shadow-lg">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center text-white text-xl mb-2.5 shadow-md">
+                                <i class="fa-solid ${card.icon}"></i>
+                            </div>
+                            <h4 class="font-bold text-base text-white">${card.title}</h4>
+                            <p class="text-xs text-amber-300 mt-1">${card.summary}</p>
+                            <span class="mt-3 text-[11px] text-slate-400 flex items-center gap-1">
+                                <i class="fa-solid fa-rotate"></i> Klik untuk membalik kartu
+                            </span>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-emerald-400 p-4 flex flex-col justify-between shadow-lg">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-700 pb-1.5 mb-2">
+                                    <span class="font-bold text-xs text-emerald-300">${card.title}</span>
+                                    <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                                </div>
+                                <p class="text-xs text-slate-200 leading-relaxed">${card.detail}</p>
+                            </div>
+                            ${extraBtnHtml}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(wrapper);
+            });
+        }
+
+        function flipCard(id) {
+            playSFX('click');
+            const inner = document.getElementById(`flip-inner-${id}`);
+            inner.classList.toggle('rotate-y-180');
+            gameState.mod3FlippedSet.add(id);
+            document.getElementById('flip-counter').textContent = `${gameState.mod3FlippedSet.size} / 6`;
+            checkMod3Completion();
+        }
+
+        function checkMod3Challenge(optIdx) {
+            const fb = document.getElementById('mod3-feedback');
+            if (optIdx === 1) {
+                gameState.mod3QuizSolved = true;
+                fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Tepat sekali! Kutipan tersebut memuat Latar (desa damai di kaki Gunung Merapi, zaman dahulu) dan Penokohan (Jaka yang jujur).</span>`;
+                checkMod3Completion();
+            } else {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Belum tepat! Perhatikan kata "desa yang damai di kaki Gunung Merapi pada zaman dahulu" dan watak "jujur".</span>`;
+            }
+        }
+
+        function checkMod3Completion() {
+            if (gameState.mod3FlippedSet.size === 6 && gameState.mod3QuizSolved) {
+                awardModuleStars(3, 3, 120);
+            } else if (gameState.mod3QuizSolved && gameState.mod3FlippedSet.size < 6) {
+                document.getElementById('mod3-feedback').innerHTML += ` <span class="text-amber-300">(Balikkan semua 6 kartu di atas untuk mengklaim 3 Bintang!)</span>`;
+            }
+        }
+
+        /* --- MODUL 4: MINI-GAME TEMUKAN CIRI KEBAHASAAN --- */
+        const mod4Rounds = [
+            {
+                prompt: "Tantangan 1/4: Klik KATA KERJA TINDAKAN (Action Verb) pada kalimat berikut!",
+                tokens: [
+                    { text: "Dengan sekuat tenaga,", correct: false },
+                    { text: "Sangkuriang", correct: false },
+                    { text: "menendang", correct: true, explain: "'menendang' adalah Kata Kerja Tindakan (Action Verb) yang dilakukan tokoh." },
+                    { text: "perahu besar itu", correct: false },
+                    { text: "hingga terbalik.", correct: false }
+                ]
+            },
+            {
+                prompt: "Tantangan 2/4: Klik KETERANGAN WAKTU pada kalimat berikut!",
+                tokens: [
+                    { text: "Pada zaman dahulu,", correct: true, explain: "'Pada zaman dahulu' adalah Keterangan Waktu khas pembuka teks legenda." },
+                    { text: "hiduplah", correct: false },
+                    { text: "seorang janda tua", correct: false },
+                    { text: "bernama Mbok Srini.", correct: false }
+                ]
+            },
+            {
+                prompt: "Tantangan 3/4: Klik KONJUNGSI URUTAN WAKTU (Kronologis) pada kalimat berikut!",
+                tokens: [
+                    { text: "Roro Jonggrang merasa sangat cemas,", correct: false },
+                    { text: "kemudian", correct: true, explain: "'kemudian' adalah Konjungsi Urutan Waktu yang menghubungkan urutan kejadian." },
+                    { text: "ia membangunkan", correct: false },
+                    { text: "para dayang istana", correct: false },
+                    { text: "untuk menumbuk lesung.", correct: false }
+                ]
+            },
+            {
+                prompt: "Tantangan 4/4: Klik bagian KALIMAT LANGSUNG pada kutipan berikut!",
+                tokens: [
+                    { text: "Malin Kundang berkata dengan angkuh,", correct: false },
+                    { text: '"Aku tidak mengenal wanita tua miskin ini!"', correct: true, explain: "Kalimat yang diapit tanda petik dua (\"...\") merupakan Kalimat Langsung." },
+                    { text: "di hadapan istrinya.", correct: false }
+                ]
+            }
+        ];
+
+        function renderMod4Round() {
+            const rIdx = gameState.mod4Round;
+            const round = mod4Rounds[rIdx];
+            document.getElementById('mod4-progress').textContent = `Tantangan ${rIdx + 1} / ${mod4Rounds.length}`;
+            document.getElementById('mod4-prompt').textContent = round.prompt;
+            document.getElementById('mod4-feedback').innerHTML = '';
+            document.getElementById('mod4-next-btn').classList.add('hidden');
+
+            const box = document.getElementById('mod4-sentence-box');
+            box.innerHTML = '';
+
+            round.tokens.forEach((tok) => {
+                const btn = document.createElement('button');
+                btn.className = 'px-3 py-1.5 rounded-xl bg-slate-700/80 hover:bg-amber-500 hover:text-slate-950 border border-slate-600 font-semibold text-sm sm:text-base transition-all';
+                btn.textContent = tok.text;
+                btn.onclick = () => handleMod4TokenClick(tok, btn);
+                box.appendChild(btn);
+            });
+        }
+
+        function handleMod4TokenClick(tok, btnEl) {
+            const fb = document.getElementById('mod4-feedback');
+            if (tok.correct) {
+                playSFX('click');
+                btnEl.className = 'px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-sm sm:text-base border-2 border-emerald-300 shadow-lg';
+                fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Benar! ${tok.explain}</span>`;
+
+                if (gameState.mod4Round < mod4Rounds.length - 1) {
+                    document.getElementById('mod4-next-btn').classList.remove('hidden');
+                } else {
+                    fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-trophy mr-1"></i> Luar Biasa! Keempat tantangan Detektif Bahasa telah kamu selesaikan!</span>`;
+                    awardModuleStars(4, 3, 130);
+                }
+            } else {
+                playSFX('error');
+                btnEl.className = 'px-3 py-1.5 rounded-xl bg-rose-900/80 text-rose-200 border border-rose-500 text-sm sm:text-base';
+                fb.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Bukan frasa itu! Perhatikan kembali instruksi ciri kebahasaan yang dicari.</span>`;
+            }
+        }
+
+        function nextMod4Round() {
+            playSFX('click');
+            if (gameState.mod4Round < mod4Rounds.length - 1) {
+                gameState.mod4Round++;
+                renderMod4Round();
+            }
+        }
+
+        /* --- MODUL 5: INTERACTIVE HIGHLIGHT & ANALISIS TEKS --- */
+        const mod5StoriesMeta = {
+            toba: {
+                title: "1. Legenda Asal-Usul Danau Toba (Sumatera Utara)",
+                question: "Berdasarkan teks <em>Legenda Danau Toba</em> di atas, bagian puncak konflik (Komplikasi) terjadi ketika...",
+                options: [
+                    "A. Toba sedang memancing ikan di sungai dekat gubuknya.",
+                    "B. Toba marah besar dan melanggar janjinya dengan menyebut Samosir sebagai anak keturunan ikan.",
+                    "C. Lembah desa berubah menjadi danau luas yang dinamakan Danau Toba."
+                ],
+                correctIdx: 1,
+                successMsg: "Jawaban Benar! Pelanggaran janji oleh Toba merupakan puncak konflik (Komplikasi) yang memicu terjadinya Danau Toba."
+            },
+            tangkuban: {
+                title: "2. Legenda Gunung Tangkuban Perahu (Jawa Barat)",
+                question: "Berdasarkan teks <em>Legenda Gunung Tangkuban Perahu</em> di atas, bagian penyelesaian masalah (Resolusi) ditunjukkan ketika...",
+                options: [
+                    "A. Dayang Sumbi tinggal di tepi hutan bersama Sangkuriang dan anjingnya, Tumang.",
+                    "B. Sangkuriang pergi mengembara setelah kepalanya dipukul dengan centong nasi.",
+                    "C. Dayang Sumbi menggagalkan pekerjaan Sangkuriang dengan membuat suasana fajar buatan hingga Sangkuriang menendang perahunya."
+                ],
+                correctIdx: 2,
+                successMsg: "Jawaban Benar! Bagian Resolusi menceritakan gagalnya syarat Sangkuriang dan ditendangnya perahu raksasa tersebut hingga terbalik."
+            },
+            prambanan: {
+                title: "3. Legenda Candi Prambanan / Roro Jonggrang (DIY & Jawa Tengah)",
+                question: "Berdasarkan teks <em>Legenda Candi Prambanan</em> di atas, manakah kutipan kalimat langsung yang muncul pada bagian Komplikasi?",
+                options: [
+                    "A. \"Aku bersedia menerima pinanganmu, asalkan kau sanggup membangun seribu candi dan dua sumur yang dalam hanya dalam waktu satu malam!\"",
+                    "B. Pada zaman dahulu, di wilayah Jawa Tengah dan Yogyakarta, berdirilah dua kerajaan besar.",
+                    "C. Kompleks candi tersebut dikenal sebagai Candi Prambanan dan Candi Sewu."
+                ],
+                correctIdx: 0,
+                successMsg: "Jawaban Benar! Ucapan syarat Roro Jonggrang yang diapit tanda petik dua tersebut merupakan Kalimat Langsung pada bagian Komplikasi."
+            }
+        };
+
+        function selectLegendStory(storyKey) {
+            playSFX('click');
+            gameState.mod5CurrentStory = storyKey;
+            const meta = mod5StoriesMeta[storyKey];
+            if (!meta) return;
+
+            document.getElementById('mod5-story-title').textContent = meta.title;
+
+            document.querySelectorAll('.legend-story-item').forEach(el => el.classList.add('hidden'));
+            const activeStory = document.getElementById(`story-content-${storyKey}`);
+            if (activeStory) activeStory.classList.remove('hidden');
+
+            const buttons = [
+                { key: 'toba', id: 'btn-story-toba', icon: 'fa-water', label: '1. Legenda Danau Toba', region: 'Sumut' },
+                { key: 'tangkuban', id: 'btn-story-tangkuban', icon: 'fa-mountain', label: '2. Tangkuban Perahu', region: 'Jabar' },
+                { key: 'prambanan', id: 'btn-story-prambanan', icon: 'fa-gopuram', label: '3. Candi Prambanan', region: 'DIY/Jateng' }
+            ];
+
+            buttons.forEach(b => {
+                const btnEl = document.getElementById(b.id);
+                if (b.key === storyKey) {
+                    btnEl.className = "p-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-between shadow-lg transition-all";
+                    btnEl.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid ${b.icon}"></i> ${b.label}</span><span class="text-[10px] px-2 py-0.5 rounded bg-slate-950/20 font-black">${b.region}</span>`;
+                } else {
+                    btnEl.className = "p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs sm:text-sm flex items-center justify-between transition-all";
+                    btnEl.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid ${b.icon}"></i> ${b.label}</span><span class="text-[10px] px-2 py-0.5 rounded bg-slate-700 text-amber-300 font-bold">${b.region}</span>`;
+                }
+            });
+
+            document.getElementById('mod5-quiz-question').innerHTML = meta.question;
+            const optsContainer = document.getElementById('mod5-quiz-options');
+            optsContainer.innerHTML = '';
+            meta.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-left transition-all';
+                btn.textContent = optText;
+                btn.onclick = () => checkMod5Quiz(idx);
+                optsContainer.appendChild(btn);
+            });
+            document.getElementById('mod5-feedback').innerHTML = '';
+        }
+
+        function setAnalysisMode(mode) {
+            playSFX('click');
+            gameState.mod5ModesVisited.add(mode);
+
+            const storyBox = document.getElementById('story-analysis-box');
+            storyBox.classList.remove('mode-struktur', 'mode-bahasa');
+
+            document.getElementById('legend-key-struktur').className = 'hidden';
+            document.getElementById('legend-key-bahasa').className = 'hidden';
+            document.querySelectorAll('.struktur-badge').forEach(b => b.classList.add('hidden'));
+
+            ['normal', 'struktur', 'bahasa'].forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                tabBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition-all';
+            });
+
+            const activeBtn = document.getElementById(`tab-${mode}`);
+            activeBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 shadow transition-all';
+
+            if (mode === 'struktur') {
+                storyBox.classList.add('mode-struktur');
+                document.getElementById('legend-key-struktur').className = 'flex flex-wrap gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs';
+                document.querySelectorAll('.struktur-badge').forEach(b => b.classList.remove('hidden'));
+            } else if (mode === 'bahasa') {
+                storyBox.classList.add('mode-bahasa');
+                document.getElementById('legend-key-bahasa').className = 'flex flex-wrap gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs';
+            }
+
+            checkMod5Completion();
+        }
+
+        function checkMod5Quiz(optIdx) {
+            const fb = document.getElementById('mod5-feedback');
+            const meta = mod5StoriesMeta[gameState.mod5CurrentStory] || mod5StoriesMeta.toba;
+            if (optIdx === meta.correctIdx) {
+                gameState.mod5QuizSolved = true;
+                fb.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> ${meta.successMsg}</span>`;
+                checkMod5Completion();
+            } else {
+                playSFX('error');
+                fb.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Kurang tepat! Gunakan tombol "Sorot Struktur" atau "Sorot Kebahasaan" di atas untuk membantu menganalisis teks.</span>`;
+            }
+        }
+
+        function checkMod5Completion() {
+            const hasVisitedBoth = gameState.mod5ModesVisited.has('struktur') && gameState.mod5ModesVisited.has('bahasa');
+            if (hasVisitedBoth && gameState.mod5QuizSolved) {
+                awardModuleStars(5, 3, 150);
+            } else if (gameState.mod5QuizSolved && !hasVisitedBoth) {
+                document.getElementById('mod5-feedback').innerHTML += ` <span class="text-amber-300">(Klik kedua tombol 'Sorot Struktur' & 'Sorot Kebahasaan' di atas untuk meraih 3 Bintang penuh!)</span>`;
+            }
+        }
+
+        /* =====================================================
+           3. THREE.JS 3D ADVENTURE MAP ENGINE
+           ===================================================== */
+        let scene, camera, renderer, raycaster, mouse;
+        const islandMeshes = [];
+        const islandLabels = [];
+        let heroGroup, heroTargetPos = new THREE.Vector3(-15, 2.2, 7);
+        let clouds = [];
+
+        let isDragging = false;
+        let prevMouse = { x: 0, y: 0 };
+        let dragDelta = 0;
+        let camTheta = 0;
+        let camPhi = 0.95;
+        let camRadius = 34;
+
+        function init3DWorld() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0b192c, 0.012);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+            updateCameraPosition();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            const ambientLight = new THREE.AmbientLight(0xfffaed, 0.75);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffd27f, 1.1);
+            dirLight.position.set(20, 35, 25);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const seaGeo = new THREE.CylinderGeometry(65, 65, 2, 64);
+            const seaMat = new THREE.MeshPhongMaterial({
+                color: 0x0c4a6e,
+                emissive: 0x082f49,
+                shininess: 60,
+                flatShading: true
+            });
+            const sea = new THREE.Mesh(seaGeo, seaMat);
+            sea.position.y = -1.2;
+            sea.receiveShadow = true;
+            scene.add(sea);
+
+            islandData.forEach((data, index) => {
+                createIsland3D(data, index);
+            });
+
+            for (let i = 0; i < islandData.length - 1; i++) {
+                const p1 = new THREE.Vector3(islandData[i].pos.x, 0.4, islandData[i].pos.z);
+                const p2 = new THREE.Vector3(islandData[i + 1].pos.x, 0.4, islandData[i + 1].pos.z);
+                const steps = 8;
+                for (let s = 1; s < steps; s++) {
+                    const t = s / steps;
+                    const pos = new THREE.Vector3().lerpVectors(p1, p2, t);
+                    pos.y += Math.sin(t * Math.PI) * 0.6;
+                    const stoneGeo = new THREE.BoxGeometry(0.6, 0.25, 0.6);
+                    const stoneMat = new THREE.MeshLambertMaterial({ color: 0xfbbf24 });
+                    const stone = new THREE.Mesh(stoneGeo, stoneMat);
+                    stone.position.copy(pos);
+                    scene.add(stone);
+                }
+            }
+
+            createHeroPawn();
+
+            for (let c = 0; c < 10; c++) {
+                const cloudGroup = new THREE.Group();
+                const cMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+                for (let b = 0; b < 3; b++) {
+                    const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(1.1 + Math.random() * 0.6, 1), cMat);
+                    puff.position.set(b * 1.1 - 1.1, Math.random() * 0.3, Math.random() * 0.4);
+                    cloudGroup.add(puff);
+                }
+                cloudGroup.position.set((Math.random() - 0.5) * 50, 8 + Math.random() * 4, (Math.random() - 0.5) * 35);
+                scene.add(cloudGroup);
+                clouds.push({ mesh: cloudGroup, speed: 0.015 + Math.random() * 0.02 });
+            }
+
+            const dom = renderer.domElement;
+            dom.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+
+            dom.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    onPointerDown({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+                }
+            }, { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    onPointerMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+                }
+            }, { passive: true });
+            window.addEventListener('touchend', onPointerUp);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createIsland3D(data, idx) {
+            const group = new THREE.Group();
+            group.position.set(data.pos.x, data.pos.y, data.pos.z);
+
+            const baseGeo = new THREE.CylinderGeometry(3.4, 2.2, 1.8, 8);
+            const baseMat = new THREE.MeshLambertMaterial({ color: 0xd97706, flatShading: true });
+            const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+            baseMesh.position.y = 0.2;
+            baseMesh.castShadow = true;
+            baseMesh.receiveShadow = true;
+            group.add(baseMesh);
+
+            const topGeo = new THREE.CylinderGeometry(3.6, 3.4, 0.6, 8);
+            const topMat = new THREE.MeshLambertMaterial({ color: 0x15803d, flatShading: true });
+            const topMesh = new THREE.Mesh(topGeo, topMat);
+            topMesh.position.y = 1.2;
+            topMesh.receiveShadow = true;
+            group.add(topMesh);
+
+            const ringGeo = new THREE.RingGeometry(3.7, 4.1, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: data.color, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+            ringMesh.rotation.x = -Math.PI / 2;
+            ringMesh.position.y = 0.05;
+            group.add(ringMesh);
+
+            const monGroup = new THREE.Group();
+            monGroup.position.y = 1.5;
+
+            if (data.monument === "scroll") {
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.9, 1.8, 6), new THREE.MeshLambertMaterial({ color: 0xf59e0b }));
+                pillar.position.y = 0.9;
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.2, 4), new THREE.MeshLambertMaterial({ color: 0x92400e }));
+                roof.position.y = 2.2;
+                roof.rotation.y = Math.PI / 4;
+                monGroup.add(pillar, roof);
+            } else if (data.monument === "candi") {
+                for (let l = 0; l < 4; l++) {
+                    const s = 1.8 - l * 0.38;
+                    const step = new THREE.Mesh(new THREE.BoxGeometry(s, 0.55, s), new THREE.MeshLambertMaterial({ color: 0x64748b }));
+                    step.position.y = l * 0.55 + 0.25;
+                    monGroup.add(step);
+                }
+                const stupa = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.9, 8), new THREE.MeshLambertMaterial({ color: 0x3b82f6 }));
+                stupa.position.y = 2.5;
+                monGroup.add(stupa);
+            } else if (data.monument === "crystal") {
+                const crys = new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x047857, shininess: 90 }));
+                crys.position.y = 1.8;
+                crys.name = "floatingCrystal";
+                monGroup.add(crys);
+            } else if (data.monument === "obelisk") {
+                const ob = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.7, 2.6, 4), new THREE.MeshLambertMaterial({ color: 0xa855f7 }));
+                ob.position.y = 1.3;
+                monGroup.add(ob);
+            } else if (data.monument === "volcano") {
+                const vol = new THREE.Mesh(new THREE.ConeGeometry(2.3, 2.8, 9, 1, true), new THREE.MeshLambertMaterial({ color: 0x475569, side: THREE.DoubleSide }));
+                vol.position.y = 1.3;
+                const lava = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.2, 12), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+                lava.position.y = 1.9;
+                monGroup.add(vol, lava);
+            }
+
+            for (let t = 0; t < 2; t++) {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.9, 5), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.2, 6), new THREE.MeshLambertMaterial({ color: 0x22c55e }));
+                leaves.position.y = 0.8;
+                trunk.add(leaves);
+                const angle = t * Math.PI + 0.6;
+                trunk.position.set(Math.cos(angle) * 2.1, 1.6, Math.sin(angle) * 2.1);
+                group.add(trunk);
+            }
+
+            group.add(monGroup);
+            group.userData = { islandId: data.id };
+            scene.add(group);
+            islandMeshes.push({ group, baseMesh, topMesh, id: data.id, basePosY: data.pos.y, phase: idx * 1.1 });
+
+            const labelsContainer = document.getElementById('labels-container');
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'absolute transform -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer transition-transform hover:scale-110';
+            labelDiv.onclick = () => selectIsland(data.id);
+            labelDiv.innerHTML = `
+                <div class="px-3 py-1.5 rounded-xl bg-slate-900/90 border-2 border-amber-400/80 shadow-xl text-center backdrop-blur-sm">
+                    <div class="text-[10px] font-black uppercase tracking-wider text-amber-400">Level ${data.id}</div>
+                    <div class="text-xs sm:text-sm font-extrabold text-white whitespace-nowrap">${data.name}</div>
+                    <div id="label-stars-${data.id}" class="flex justify-center space-x-1 text-[10px] text-slate-600 mt-0.5">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+                <div class="w-3 h-3 bg-amber-400 rotate-45 mx-auto -mt-1.5 border-r border-b border-slate-900"></div>
+            `;
+            labelsContainer.appendChild(labelDiv);
+            islandLabels.push({ el: labelDiv, pos: new THREE.Vector3(data.pos.x, data.pos.y + 4.8, data.pos.z) });
+        }
+
+        function createHeroPawn() {
+            heroGroup = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.0, 8), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+            body.position.y = 0.5;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+            head.position.y = 1.25;
+            const band = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.37, 0.15, 12), new THREE.MeshLambertMaterial({ color: 0xf59e0b }));
+            band.position.y = 1.35;
+
+            heroGroup.add(body, head, band);
+            heroGroup.position.set(islandData[0].pos.x + 1.4, 1.6, islandData[0].pos.z + 1.2);
+            heroTargetPos.copy(heroGroup.position);
+            scene.add(heroGroup);
+        }
+
+        function moveHeroToIsland(id) {
+            const target = islandData.find(x => x.id === id);
+            if (target) {
+                heroTargetPos.set(target.pos.x + 1.4, 1.6, target.pos.z + 1.2);
+            }
+        }
+
+        function updateCameraPosition() {
+            camera.position.x = camRadius * Math.sin(camPhi) * Math.sin(camTheta);
+            camera.position.y = camRadius * Math.cos(camPhi);
+            camera.position.z = camRadius * Math.sin(camPhi) * Math.cos(camTheta);
+            camera.lookAt(0, 1, 0);
+        }
+
+        function resetCameraView() {
+            playSFX('click');
+            camTheta = 0;
+            camPhi = 0.95;
+            updateCameraPosition();
+        }
+
+        function onPointerDown(e) {
+            isDragging = true;
+            dragDelta = 0;
+            prevMouse.x = e.clientX;
+            prevMouse.y = e.clientY;
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - prevMouse.x;
+            const dy = e.clientY - prevMouse.y;
+            dragDelta += Math.abs(dx) + Math.abs(dy);
+
+            camTheta -= dx * 0.006;
+            camPhi = Math.max(0.45, Math.min(1.32, camPhi - dy * 0.005));
+            updateCameraPosition();
+
+            prevMouse.x = e.clientX;
+            prevMouse.y = e.clientY;
+        }
+
+        function onPointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (dragDelta < 6 && e.clientX !== undefined) {
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+
+                const clickableMeshes = [];
+                islandMeshes.forEach(item => {
+                    item.group.traverse(child => {
+                        if (child.isMesh) {
+                            child.userData.islandId = item.id;
+                            clickableMeshes.push(child);
+                        }
+                    });
+                });
+
+                const intersects = raycaster.intersectObjects(clickableMeshes);
+                if (intersects.length > 0) {
+                    const hitId = intersects[0].object.userData.islandId;
+                    if (hitId) selectIsland(hitId);
+                }
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function updateFloatingLabels() {
+            islandLabels.forEach(item => {
+                const tempV = item.pos.clone();
+                tempV.project(camera);
+
+                const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(tempV.y * 0.5) + 0.5) * window.innerHeight;
+
+                item.el.style.left = `${x}px`;
+                item.el.style.top = `${y}px`;
+            });
+        }
+
+        let clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsed = clock.getElapsedTime();
+
+            islandMeshes.forEach(item => {
+                item.group.position.y = item.basePosY + Math.sin(elapsed * 1.8 + item.phase) * 0.18;
+                const crys = item.group.getObjectByName("floatingCrystal");
+                if (crys) {
+                    crys.rotation.y = elapsed * 1.5;
+                    crys.position.y = 1.8 + Math.sin(elapsed * 3) * 0.2;
+                }
+            });
+
+            if (heroGroup) {
+                heroGroup.position.lerp(heroTargetPos, 0.08);
+                heroGroup.position.y = 1.6 + Math.abs(Math.sin(elapsed * 5)) * 0.35;
+                heroGroup.rotation.y += 0.03;
+            }
+
+            clouds.forEach(c => {
+                c.mesh.position.x += c.speed;
+                if (c.mesh.position.x > 30) c.mesh.position.x = -30;
+            });
+
+            updateFloatingLabels();
+            renderer.render(scene, camera);
+        }
+
+        /* ==========================================
+           4. INITIALIZATION ON WINDOW LOAD
+           ========================================== */
+        window.onload = function () {
+            init3DWorld();
+            initMod2Game();
+            initMod3Cards();
+            renderMod4Round();
+            updateHUD();
+            animate();
+        };
+    </script>
+</body>
+</html>
